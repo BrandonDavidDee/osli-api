@@ -1,0 +1,24 @@
+.DS_Store*
+.thumbs.db
+.Thumbs.db
+.idea
+
+venv
+
+.env
+.env.*
+.env.local*
+**/.env
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+.ebextensions/*
+.environmentvariables.config
+
+*.pyc
+*.pyo
+__pycache__
+
+
