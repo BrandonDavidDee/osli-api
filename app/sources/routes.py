@@ -1,40 +1,7 @@
-from typing import Annotated
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Security
-
-from app.authentication.models import AccessTokenData
-from app.authentication.token import get_current_user
-from app.sources.controller import (
-    SourceDetailController,
-    SourceImportController,
-    SourcesController,
-)
+from app.sources.s3 import routes as s3
 
 router = APIRouter()
 
-
-@router.get("")
-async def source_list(
-    token_data: Annotated[
-        AccessTokenData, Security(get_current_user, scopes=["source_list"])
-    ],
-):
-    return await SourcesController(token_data).get_list()
-
-
-@router.get("/{source_id}")
-async def source_detail(
-    source_id: int,
-    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
-):
-    controller = SourceDetailController(token_data, source_id)
-    return await controller.source_detail()
-
-
-@router.get("/{source_id}/import")
-async def source_import(
-        source_id: int,
-        token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])]
-):
-    # TODO: this function needs a way to filter out directories
-    return await SourceImportController(token_data, source_id).import_from_source()
+router.include_router(s3.router, prefix="/s3")

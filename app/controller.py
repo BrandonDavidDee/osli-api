@@ -2,8 +2,8 @@ import mimetypes
 
 import boto3
 from cryptography.fernet import Fernet
-from app.authentication.models import AccessTokenData
 
+from app.authentication.models import AccessTokenData
 from app.db import db
 
 

@@ -1,20 +1,19 @@
 import os
 
-from fastapi import HTTPException
 from asyncpg import Record
+from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
-
 from app.controller import BaseController
-from app.sources.controller import SourceDetailController
-from app.items.models import Item, SearchParams, ItemTag
+from app.items.s3.models import Item, ItemTag, SearchParams
+from app.sources.s3.controller import SourceDetailController
+from app.sources.s3.models import Source
 from app.tags.models import Tag
-from app.sources.models import Source
 
 
 class ItemListController(SourceDetailController):
-    def __init__(self, token_data: AccessTokenData, source_id: int):
-        super().__init__(token_data, source_id)
+    def __init__(self, token_data: AccessTokenData, source_s3_id: int):
+        super().__init__(token_data, source_s3_id)
 
     @staticmethod
     def get_filename(path):
@@ -29,9 +28,9 @@ class ItemListController(SourceDetailController):
             sc.bucket_name,
             sc.media_prefix,
             sc.grid_view
-            FROM item AS i
-            LEFT JOIN source AS sc ON sc.id = i.source_id
-            LEFT JOIN tag_item as j ON j.item_id = i.id """
+            FROM item_s3 AS i
+            LEFT JOIN source_s3 AS sc ON sc.id = i.source_s3_id
+            LEFT JOIN tag_item_s3 as j ON j.item_s3_id = i.id """
             placeholders = ", ".join(
                 f"${i}" for i in range(7, 7 + len(payload.tag_ids))
             )
@@ -40,7 +39,7 @@ class ItemListController(SourceDetailController):
               ($3 = '') OR (i.notes ILIKE '%' || $4 || '%') OR (i.file_path ILIKE '%' || $5 || '%')
             ) 
             AND j.tag_id IN ({placeholders})
-            AND i.source_id = $6
+            AND i.source_s3_id = $6
             """
             # query += " GROUP BY i.id ORDER BY i.id DESC LIMIT $1 OFFSET $2"
             query += """ 
@@ -52,7 +51,7 @@ class ItemListController(SourceDetailController):
                 payload.filter,
                 payload.filter,
                 payload.filter,
-                self.source_id,
+                self.source_s3_id,
             )
             combined_values: tuple = values + tuple(payload.tag_ids)
             result: Record = await self.db.select_many(query, *combined_values)
@@ -64,10 +63,10 @@ class ItemListController(SourceDetailController):
             sc.bucket_name,
             sc.media_prefix,
             sc.grid_view
-            FROM item AS i
-            LEFT JOIN source AS sc ON sc.id = i.source_id
+            FROM item_s3 AS i
+            LEFT JOIN source_s3 AS sc ON sc.id = i.source_s3_id
             WHERE (($3 = '') OR i.notes ILIKE '%' || $4 || '%' OR i.file_path ILIKE '%' || $5 || '%')
-            AND i.source_id = $6
+            AND i.source_s3_id = $6
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
@@ -75,7 +74,7 @@ class ItemListController(SourceDetailController):
                 payload.filter,
                 payload.filter,
                 payload.filter,
-                self.source_id,
+                self.source_s3_id,
             )
             result: Record = await self.db.select_many(query, *values)
 
@@ -83,13 +82,14 @@ class ItemListController(SourceDetailController):
 
         for row in result:
             item = Item(**row)
-            item.source = Source(
-                id=row["source_id"],
-                name=row["name"],
-                bucket_name=row["bucket_name"],
-                media_prefix=row["media_prefix"],
-                grid_view=row["grid_view"],
-            )
+            if row["source_s3_id"]:
+                item.source = Source(
+                    id=row["source_s3_id"],
+                    name=row["name"],
+                    bucket_name=row["bucket_name"],
+                    media_prefix=row["media_prefix"],
+                    grid_view=row["grid_view"],
+                )
             item.file_name = self.get_filename(row["file_path"])
             output.append(item)
         total_count = result[0]["total_count"] if result else 0
@@ -123,9 +123,9 @@ class ItemDetailController(BaseController):
         j.id as tag_item_id,
         tag.id as tag_id,
         tag.title as tag_title
-        FROM item i 
-        LEFT JOIN source AS sc ON sc.id = i.source_id
-        LEFT JOIN tag_item as j ON j.item_id = i.id
+        FROM item_s3 i 
+        LEFT JOIN source_s3 AS sc ON sc.id = i.source_s3_id
+        LEFT JOIN tag_item_s3 as j ON j.item_s3_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
         WHERE i.id = $1
         """
@@ -139,7 +139,7 @@ class ItemDetailController(BaseController):
 
         item = Item(**base_row)
         item.source = Source(
-            id=base_row["source_id"],
+            id=base_row["source_s3_id"],
             name=base_row["name"],
             bucket_name=base_row["bucket_name"],
             media_prefix=base_row["media_prefix"],
@@ -147,20 +147,20 @@ class ItemDetailController(BaseController):
         )
 
         for record in result:
-            if record['tag_item_id']:
+            if record["tag_item_id"]:
                 item_tag = ItemTag(
-                    id=record['tag_item_id'],
-                    tag=Tag(
-                        id=record['tag_id'],
-                        title=record['tag_title']
-                    )
+                    id=record["tag_item_id"],
+                    tag=Tag(id=record["tag_id"], title=record["tag_title"]),
                 )
                 item.tags.append(item_tag)
 
         return item
 
     async def item_update(self, payload: Item):
-        query = "UPDATE item SET notes = $1 WHERE id = $2 RETURNING *"
-        values: tuple = (payload.notes, self.item_id,)
+        query = "UPDATE item_s3 SET notes = $1 WHERE id = $2 RETURNING *"
+        values: tuple = (
+            payload.notes,
+            self.item_id,
+        )
         await self.db.insert(query, *values)
         return payload

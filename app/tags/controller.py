@@ -1,8 +1,8 @@
 from asyncpg import Record
 
+from app.authentication.models import AccessTokenData
 from app.controller import BaseController
 from app.tags.models import Tag
-from app.authentication.models import AccessTokenData
 
 
 class TagController(BaseController):

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.sources.models import Source
+from app.sources.s3.models import Source
 from app.tags.models import Tag
 
 

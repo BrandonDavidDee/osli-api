@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.sources.models import Source
+from app.sources.s3.models import Source
 
 
 class SourcesController(BaseController):
@@ -13,17 +13,17 @@ class SourcesController(BaseController):
         super().__init__(token_data)
 
     async def get_list(self):
-        return await self.db.select_many("SELECT * FROM source")
+        return await self.db.select_many("SELECT * FROM source_s3")
 
 
 class SourceDetailController(BaseController):
-    def __init__(self, token_data: AccessTokenData, source_id: int):
+    def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data)
-        self.source_id = source_id
+        self.source_s3_id = source_s3_id
 
     async def source_detail(self):
         result: Record = await self.db.select_one(
-            "SELECT * FROM source WHERE id = ($1)", self.source_id
+            "SELECT * FROM source_s3 WHERE id = ($1)", self.source_s3_id
         )
         if not result:
             raise HTTPException(status_code=404)
@@ -37,9 +37,9 @@ class SourceDetailController(BaseController):
 
 
 class SourceImportController(BaseController):
-    def __init__(self, token_data: AccessTokenData, source_id: int):
+    def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data)
-        self.source_id = source_id
+        self.source_s3_id = source_s3_id
 
     async def post_group(self, objects: list[dict]):
         output: list[dict] = []
@@ -47,7 +47,7 @@ class SourceImportController(BaseController):
             async with connection.transaction():
                 try:
                     query = """INSERT INTO item
-                    (source_id, 
+                    (source_s3_id, 
                     mime_type, 
                     file_path, 
                     file_size, 
@@ -57,7 +57,7 @@ class SourceImportController(BaseController):
                     RETURNING *"""
                     for obj in objects:
                         values: tuple = (
-                            self.source_id,
+                            self.source_s3_id,
                             obj["mime_type"],
                             obj["key"],
                             obj["size"],
@@ -72,7 +72,7 @@ class SourceImportController(BaseController):
 
     async def import_from_source(self):
         record = await self.db.select_one(
-            "SELECT * FROM source WHERE id = ($1)", self.source_id
+            "SELECT * FROM source WHERE id = ($1)", self.source_s3_id
         )
         bucket_name = record["bucket_name"]
         s3_client = self.get_s3_client(
