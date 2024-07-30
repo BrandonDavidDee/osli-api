@@ -8,6 +8,7 @@ from app.controller import BaseController
 from app.items.models import SearchParams
 from app.items.s3.models import ItemS3, ItemTag
 from app.sources.s3.controller import SourceS3DetailController
+from app.sources.models import SourceType
 from app.sources.s3.models import SourceS3
 from app.tags.models import Tag
 
@@ -15,10 +16,6 @@ from app.tags.models import Tag
 class ItemS3ListController(SourceS3DetailController):
     def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data, source_s3_id)
-
-    @staticmethod
-    def get_filename(path):
-        return os.path.basename(path)
 
     async def item_search(self, payload: SearchParams) -> dict:
         if len(payload.tag_ids):
@@ -42,7 +39,6 @@ class ItemS3ListController(SourceS3DetailController):
             AND j.tag_id IN ({placeholders})
             AND i.source_s3_id = $6
             """
-            # query += " GROUP BY i.id ORDER BY i.id DESC LIMIT $1 OFFSET $2"
             query += """ 
             GROUP BY i.id, sc.name, sc.bucket_name, sc.media_prefix, sc.grid_view
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
@@ -90,6 +86,7 @@ class ItemS3ListController(SourceS3DetailController):
                     bucket_name=row["bucket_name"],
                     media_prefix=row["media_prefix"],
                     grid_view=row["grid_view"],
+                    source_type=SourceType.S3,
                 )
             item.file_name = self.get_filename(row["file_path"])
             output.append(item)
@@ -145,6 +142,7 @@ class ItemS3DetailController(BaseController):
             bucket_name=base_row["bucket_name"],
             media_prefix=base_row["media_prefix"],
             grid_view=base_row["grid_view"],
+            source_type=SourceType.S3
         )
 
         for record in result:

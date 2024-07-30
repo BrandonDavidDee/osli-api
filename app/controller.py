@@ -1,3 +1,4 @@
+import os
 import mimetypes
 
 import boto3
@@ -11,6 +12,10 @@ class BaseController:
     def __init__(self, token_data: AccessTokenData):
         self.token_data = token_data
         self.db = db
+
+    @staticmethod
+    def get_filename(path):
+        return os.path.basename(path)
 
     @staticmethod
     def get_mime_type(filename):
