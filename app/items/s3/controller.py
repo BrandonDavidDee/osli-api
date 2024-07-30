@@ -5,13 +5,14 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.items.s3.models import Item, ItemTag, SearchParams
-from app.sources.s3.controller import SourceDetailController
-from app.sources.s3.models import Source
+from app.items.models import SearchParams
+from app.items.s3.models import ItemS3, ItemTag
+from app.sources.s3.controller import SourceS3DetailController
+from app.sources.s3.models import SourceS3
 from app.tags.models import Tag
 
 
-class ItemListController(SourceDetailController):
+class ItemS3ListController(SourceS3DetailController):
     def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data, source_s3_id)
 
@@ -78,12 +79,12 @@ class ItemListController(SourceDetailController):
             )
             result: Record = await self.db.select_many(query, *values)
 
-        output: list[Item] = []
+        output: list[ItemS3] = []
 
         for row in result:
-            item = Item(**row)
+            item = ItemS3(**row)
             if row["source_s3_id"]:
-                item.source = Source(
+                item.source = SourceS3(
                     id=row["source_s3_id"],
                     name=row["name"],
                     bucket_name=row["bucket_name"],
@@ -108,7 +109,7 @@ class ItemListController(SourceDetailController):
         }
 
 
-class ItemDetailController(BaseController):
+class ItemS3DetailController(BaseController):
     def __init__(self, token_data: AccessTokenData, item_id: int):
         super().__init__(token_data)
         self.item_id = item_id
@@ -137,8 +138,8 @@ class ItemDetailController(BaseController):
 
         base_row = result[0]
 
-        item = Item(**base_row)
-        item.source = Source(
+        item = ItemS3(**base_row)
+        item.source = SourceS3(
             id=base_row["source_s3_id"],
             name=base_row["name"],
             bucket_name=base_row["bucket_name"],
@@ -156,7 +157,7 @@ class ItemDetailController(BaseController):
 
         return item
 
-    async def item_update(self, payload: Item):
+    async def item_update(self, payload: ItemS3):
         query = "UPDATE item_s3 SET notes = $1 WHERE id = $2 RETURNING *"
         values: tuple = (
             payload.notes,

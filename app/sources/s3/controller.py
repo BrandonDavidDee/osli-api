@@ -5,10 +5,10 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.sources.s3.models import Source
+from app.sources.s3.models import SourceS3
 
 
-class SourcesController(BaseController):
+class SourcesS3Controller(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
@@ -16,7 +16,7 @@ class SourcesController(BaseController):
         return await self.db.select_many("SELECT * FROM source_s3")
 
 
-class SourceDetailController(BaseController):
+class SourceS3DetailController(BaseController):
     def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data)
         self.source_s3_id = source_s3_id
@@ -27,7 +27,7 @@ class SourceDetailController(BaseController):
         )
         if not result:
             raise HTTPException(status_code=404)
-        return Source(
+        return SourceS3(
             id=result["id"],
             name=result["name"],
             bucket_name=result["bucket_name"],
@@ -36,7 +36,7 @@ class SourceDetailController(BaseController):
         )
 
 
-class SourceImportController(BaseController):
+class SourceS3ImportController(BaseController):
     def __init__(self, token_data: AccessTokenData, source_s3_id: int):
         super().__init__(token_data)
         self.source_s3_id = source_s3_id

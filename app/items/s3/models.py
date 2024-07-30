@@ -1,17 +1,8 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 
-from app.sources.s3.models import Source
+from app.sources.s3.models import SourceS3
+from app.items.models import ItemBase
 from app.tags.models import Tag
-
-
-class SearchParams(BaseModel):
-    source: Source | None = None
-    limit: int = 10
-    offset: int = 0
-    filter: str = ""
-    tag_ids: list[int] = []
 
 
 class ItemTag(BaseModel):
@@ -19,14 +10,9 @@ class ItemTag(BaseModel):
     tag: Tag
 
 
-class Item(BaseModel):
-    id: int | None = None
+class ItemS3(ItemBase):
     mime_type: str | None = None
     file_path: str
     file_name: str | None = None
     file_size: int | None = None
-    notes: str | None = None
-    date_created: datetime
-    created_by: str
-    source: Source | None = None
-    tags: list[ItemTag] = []
+    source: SourceS3 | None = None
