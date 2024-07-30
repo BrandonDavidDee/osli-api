@@ -12,11 +12,11 @@ router = APIRouter()
 
 @router.post("")
 async def item_search(
-    source_config_id: int,
+    source_id: int,
     payload: SearchParams,
     token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
-    controller = ItemListController(token_data, source_config_id)
+    controller = ItemListController(token_data, source_id)
     return await controller.item_search(payload)
 
 

@@ -32,13 +32,13 @@ def get_token_from_header(authorization: str = Header(None)) -> str:
     return token
 
 
-def parse_dynamic_scope(scope: str, source_config_id: int | None = None) -> str:
-    if not source_config_id:
+def parse_dynamic_scope(scope: str, source_id: int | None = None) -> str:
+    if not source_id:
         return scope
     scope_map = {
-        "admin": f"{source_config_id}:admin",
-        "view": f"{source_config_id}:view",
-        "edit": f"{source_config_id}:edit",
+        "admin": f"{source_id}:admin",
+        "view": f"{source_id}:view",
+        "edit": f"{source_id}:edit",
     }
     return scope_map.get(scope, scope)
 
@@ -46,7 +46,7 @@ def parse_dynamic_scope(scope: str, source_config_id: int | None = None) -> str:
 async def get_current_user(
     security_scopes: SecurityScopes,
     token: Annotated[str, Depends(get_token_from_header)],
-    source_config_id: int | None = None,
+    source_id: int | None = None,
 ) -> AccessTokenData:
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
@@ -72,18 +72,18 @@ async def get_current_user(
         return token_data
 
     # Expand the user's scopes based on the above SCOPE_HIERARCHY
-    if source_config_id:
+    if source_id:
         expanded_scopes = set()
         for user_scope in token_data.scopes:
             base_scope = user_scope.split(":")[1] if ":" in user_scope else user_scope
             expanded_scopes.update(SCOPE_HIERARCHY.get(base_scope, []))
 
-        expanded_scopes = {f"{source_config_id}:{scope}" for scope in expanded_scopes}
+        expanded_scopes = {f"{source_id}:{scope}" for scope in expanded_scopes}
     else:
         expanded_scopes = token_data.scopes
 
     for scope in security_scopes.scopes:
-        parsed_scope = parse_dynamic_scope(scope, source_config_id)
+        parsed_scope = parse_dynamic_scope(scope, source_id)
         if parsed_scope not in expanded_scopes:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

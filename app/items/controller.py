@@ -9,12 +9,12 @@ from app.controller import BaseController
 from app.sources.controller import SourceDetailController
 from app.items.models import Item, SearchParams, ItemTag
 from app.tags.models import Tag
-from app.sources.models import SourceConfig
+from app.sources.models import Source
 
 
 class ItemListController(SourceDetailController):
-    def __init__(self, token_data: AccessTokenData, source_config_id: int):
-        super().__init__(token_data, source_config_id)
+    def __init__(self, token_data: AccessTokenData, source_id: int):
+        super().__init__(token_data, source_id)
 
     @staticmethod
     def get_filename(path):
@@ -30,7 +30,7 @@ class ItemListController(SourceDetailController):
             sc.media_prefix,
             sc.grid_view
             FROM item AS i
-            LEFT JOIN source_config AS sc ON sc.id = i.source_config_id
+            LEFT JOIN source AS sc ON sc.id = i.source_id
             LEFT JOIN tag_item as j ON j.item_id = i.id """
             placeholders = ", ".join(
                 f"${i}" for i in range(7, 7 + len(payload.tag_ids))
@@ -40,7 +40,7 @@ class ItemListController(SourceDetailController):
               ($3 = '') OR (i.notes ILIKE '%' || $4 || '%') OR (i.file_path ILIKE '%' || $5 || '%')
             ) 
             AND j.tag_id IN ({placeholders})
-            AND i.source_config_id = $6
+            AND i.source_id = $6
             """
             # query += " GROUP BY i.id ORDER BY i.id DESC LIMIT $1 OFFSET $2"
             query += """ 
@@ -52,7 +52,7 @@ class ItemListController(SourceDetailController):
                 payload.filter,
                 payload.filter,
                 payload.filter,
-                self.source_config_id,
+                self.source_id,
             )
             combined_values: tuple = values + tuple(payload.tag_ids)
             result: Record = await self.db.select_many(query, *combined_values)
@@ -65,9 +65,9 @@ class ItemListController(SourceDetailController):
             sc.media_prefix,
             sc.grid_view
             FROM item AS i
-            LEFT JOIN source_config AS sc ON sc.id = i.source_config_id
+            LEFT JOIN source AS sc ON sc.id = i.source_id
             WHERE (($3 = '') OR i.notes ILIKE '%' || $4 || '%' OR i.file_path ILIKE '%' || $5 || '%')
-            AND i.source_config_id = $6
+            AND i.source_id = $6
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
@@ -75,7 +75,7 @@ class ItemListController(SourceDetailController):
                 payload.filter,
                 payload.filter,
                 payload.filter,
-                self.source_config_id,
+                self.source_id,
             )
             result: Record = await self.db.select_many(query, *values)
 
@@ -83,8 +83,8 @@ class ItemListController(SourceDetailController):
 
         for row in result:
             item = Item(**row)
-            item.source_config = SourceConfig(
-                id=row["source_config_id"],
+            item.source = Source(
+                id=row["source_id"],
                 name=row["name"],
                 bucket_name=row["bucket_name"],
                 media_prefix=row["media_prefix"],
@@ -95,14 +95,14 @@ class ItemListController(SourceDetailController):
         total_count = result[0]["total_count"] if result else 0
 
         if output:
-            # we've joined the source config to each item:
-            source_config = output[0].source_config
+            # we've joined the source to each item:
+            source = output[0].source
         else:
             # but if there are no results, we still want the list view page to have source info:
-            source_config = await self.source_detail()
+            source = await self.source_detail()
 
         return {
-            "source_config": source_config,
+            "source": source,
             "total_count": total_count,
             "items": output,
         }
@@ -124,7 +124,7 @@ class ItemDetailController(BaseController):
         tag.id as tag_id,
         tag.title as tag_title
         FROM item i 
-        LEFT JOIN source_config AS sc ON sc.id = i.source_config_id
+        LEFT JOIN source AS sc ON sc.id = i.source_id
         LEFT JOIN tag_item as j ON j.item_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
         WHERE i.id = $1
@@ -138,8 +138,8 @@ class ItemDetailController(BaseController):
         base_row = result[0]
 
         item = Item(**base_row)
-        item.source_config = SourceConfig(
-            id=base_row["source_config_id"],
+        item.source = Source(
+            id=base_row["source_id"],
             name=base_row["name"],
             bucket_name=base_row["bucket_name"],
             media_prefix=base_row["media_prefix"],

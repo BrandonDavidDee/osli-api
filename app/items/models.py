@@ -2,12 +2,12 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.sources.models import SourceConfig
+from app.sources.models import Source
 from app.tags.models import Tag
 
 
 class SearchParams(BaseModel):
-    source_config: SourceConfig | None = None
+    source: Source | None = None
     limit: int = 10
     offset: int = 0
     filter: str = ""
@@ -28,5 +28,5 @@ class Item(BaseModel):
     notes: str | None = None
     date_created: datetime
     created_by: str
-    source_config: SourceConfig | None = None
+    source: Source | None = None
     tags: list[ItemTag] = []

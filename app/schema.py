@@ -19,8 +19,8 @@ class AuthUser(Base):
     last_active = Column(DateTime(timezone=True))
 
 
-class SourceConfig(Base):
-    __tablename__ = "source_config"
+class Source(Base):
+    __tablename__ = "source"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
@@ -35,9 +35,9 @@ class Item(Base):
     __tablename__ = "item"
 
     id = Column(Integer, primary_key=True)
-    source_config_id = Column(
+    source_id = Column(
         Integer,
-        ForeignKey("item.id", name="item_source_config_id_fkey", ondelete="CASCADE"),
+        ForeignKey("source.id", name="item_source_id_fkey", ondelete="CASCADE"),
         nullable=False,
     )
     mime_type = Column(String(100))

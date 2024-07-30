@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class SourceConfig(BaseModel):
+class Source(BaseModel):
     id: int
     name: str
     bucket_name: str
