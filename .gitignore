@@ -21,4 +21,4 @@ venv
 *.pyo
 __pycache__
 
-
+script.py

@@ -44,7 +44,7 @@ class SourceVimeo(Base):
 class ItemBucket(Base):
     __tablename__ = "item_bucket"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     source_bucket_id = Column(
         Integer,
         ForeignKey(
@@ -65,7 +65,7 @@ class ItemBucket(Base):
 class ItemVimeo(Base):
     __tablename__ = "item_vimeo"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     source_vimeo_id = Column(
         Integer,
         ForeignKey(
@@ -76,6 +76,7 @@ class ItemVimeo(Base):
         nullable=False,
     )
     video_id = Column(String, nullable=False)
+    thumbnail = Column(String)
     notes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by = Column(String, nullable=True)
