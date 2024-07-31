@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from app.sources.s3.models import SourceS3
 from app.items.models import ItemBase
+from app.sources.bucket.models import SourceBucket
 from app.tags.models import Tag
 
 
@@ -10,9 +10,9 @@ class ItemTag(BaseModel):
     tag: Tag
 
 
-class ItemS3(ItemBase):
+class ItemBucket(ItemBase):
     mime_type: str | None = None
     file_path: str
     file_name: str | None = None
     file_size: int | None = None
-    source: SourceS3 | None = None
+    source: SourceBucket | None = None

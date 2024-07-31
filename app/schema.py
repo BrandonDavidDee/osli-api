@@ -18,8 +18,8 @@ class AuthUser(Base):
     date_created = Column(DateTime(timezone=True), server_default=func.now())
 
 
-class SourceS3(Base):
-    __tablename__ = "source_s3"
+class SourceBucket(Base):
+    __tablename__ = "source_bucket"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
@@ -41,14 +41,16 @@ class SourceVimeo(Base):
     grid_view = Column(Boolean, default=False)
 
 
-class ItemS3(Base):
-    __tablename__ = "item_s3"
+class ItemBucket(Base):
+    __tablename__ = "item_bucket"
 
     id = Column(Integer, primary_key=True)
-    source_s3_id = Column(
+    source_bucket_id = Column(
         Integer,
         ForeignKey(
-            "source_s3.id", name="item_s3_source_s3_id_fkey", ondelete="CASCADE"
+            "source_bucket.id",
+            name="item_bucket_source_bucket_id_fkey",
+            ondelete="CASCADE",
         ),
         nullable=False,
     )
@@ -86,19 +88,21 @@ class Tag(Base):
     title = Column(String, unique=True, index=True)
 
 
-class TagItemS3(Base):
-    __tablename__ = "tag_item_s3"
+class TagItemBucket(Base):
+    __tablename__ = "tag_item_bucket"
 
     id = Column(Integer, primary_key=True)
     tag_id = Column(
         Integer,
-        ForeignKey("tag.id", name="tag_item_s3_tag_id_fkey", ondelete="CASCADE"),
+        ForeignKey("tag.id", name="tag_item_bucket_tag_id_fkey", ondelete="CASCADE"),
         nullable=False,
     )
-    item_s3_id = Column(
+    item_bucket_id = Column(
         Integer,
         ForeignKey(
-            "item_s3.id", name="tag_item_s3_item_s3_id_fkey", ondelete="CASCADE"
+            "item_bucket.id",
+            name="tag_item_bucket_item_bucket_id_fkey",
+            ondelete="CASCADE",
         ),
         nullable=False,
     )

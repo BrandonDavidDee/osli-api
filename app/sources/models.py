@@ -1,9 +1,10 @@
 from enum import Enum
+
 from pydantic import BaseModel
 
 
 class SourceType(str, Enum):
-    S3 = "s3"
+    BUCKET = "bucket"
     VIMEO = "vimeo"
 
 

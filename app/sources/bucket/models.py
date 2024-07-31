@@ -1,7 +1,7 @@
 from app.sources.models import SourceBase
 
 
-class SourceS3(SourceBase):
+class SourceBucket(SourceBase):
     bucket_name: str
     access_key_id: str | None = None
     secret_access_key: str | None = None

@@ -11,9 +11,9 @@ router = APIRouter()
 
 @router.post("")
 async def item_vimeo_list(
-        source_vimeo_id: int,
-        payload: SearchParams,
-        token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
+    source_id: int,
+    payload: SearchParams,
+    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
     return {
         "source": None,

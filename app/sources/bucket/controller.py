@@ -5,43 +5,45 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
+from app.sources.bucket.models import SourceBucket
 from app.sources.models import SourceType
-from app.sources.s3.models import SourceS3
 
 
-class SourcesS3Controller(BaseController):
+class SourceBucketController(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
-    async def get_list(self) -> list[SourceS3]:
-        results: list[Record] = await self.db.select_many("SELECT * FROM source_s3")
-        output: list[SourceS3] = []
+    async def get_list(self) -> list[SourceBucket]:
+        results: list[Record] = await self.db.select_many("SELECT * FROM source_bucket")
+        output: list[SourceBucket] = []
         for row in results:
-            output.append(SourceS3(
-                id=row["id"],
-                source_type=SourceType.S3,
-                name=row["name"],
-                bucket_name=row["bucket_name"],
-                media_prefix=row["media_prefix"],
-                grid_view=row["grid_view"],
-            ))
+            output.append(
+                SourceBucket(
+                    id=row["id"],
+                    source_type=SourceType.BUCKET,
+                    name=row["name"],
+                    bucket_name=row["bucket_name"],
+                    media_prefix=row["media_prefix"],
+                    grid_view=row["grid_view"],
+                )
+            )
         return output
 
 
-class SourceS3DetailController(BaseController):
-    def __init__(self, token_data: AccessTokenData, source_s3_id: int):
+class SourceBucketDetailController(BaseController):
+    def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
-        self.source_s3_id = source_s3_id
+        self.source_id = source_id
 
     async def source_detail(self):
         result: Record = await self.db.select_one(
-            "SELECT * FROM source_s3 WHERE id = ($1)", self.source_s3_id
+            "SELECT * FROM source_bucket WHERE id = ($1)", self.source_id
         )
         if not result:
             raise HTTPException(status_code=404)
-        return SourceS3(
+        return SourceBucket(
             id=result["id"],
-            source_type=SourceType.S3,
+            source_type=SourceType.BUCKET,
             name=result["name"],
             bucket_name=result["bucket_name"],
             media_prefix=result["media_prefix"],
@@ -49,10 +51,10 @@ class SourceS3DetailController(BaseController):
         )
 
 
-class SourceS3ImportController(BaseController):
-    def __init__(self, token_data: AccessTokenData, source_s3_id: int):
+class SourceBucketImportController(BaseController):
+    def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
-        self.source_s3_id = source_s3_id
+        self.source_id = source_id
 
     async def post_group(self, objects: list[dict]):
         output: list[dict] = []
@@ -60,7 +62,7 @@ class SourceS3ImportController(BaseController):
             async with connection.transaction():
                 try:
                     query = """INSERT INTO item
-                    (source_s3_id, 
+                    (source_bucket_id, 
                     mime_type, 
                     file_path, 
                     file_size, 
@@ -70,7 +72,7 @@ class SourceS3ImportController(BaseController):
                     RETURNING *"""
                     for obj in objects:
                         values: tuple = (
-                            self.source_s3_id,
+                            self.source_id,
                             obj["mime_type"],
                             obj["key"],
                             obj["size"],
@@ -85,7 +87,7 @@ class SourceS3ImportController(BaseController):
 
     async def import_from_source(self):
         record = await self.db.select_one(
-            "SELECT * FROM source WHERE id = ($1)", self.source_s3_id
+            "SELECT * FROM source_bucket WHERE id = ($1)", self.source_id
         )
         bucket_name = record["bucket_name"]
         s3_client = self.get_s3_client(

@@ -1,5 +1,5 @@
-import os
 import mimetypes
+import os
 
 import boto3
 from cryptography.fernet import Fernet

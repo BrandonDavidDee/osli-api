@@ -1,6 +1,6 @@
 from asyncpg import Record
-
 from fastapi import HTTPException
+
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
 from app.sources.models import SourceType
@@ -15,22 +15,24 @@ class SourcesVimeoController(BaseController):
         results: list[Record] = await self.db.select_many("SELECT * FROM source_vimeo")
         output: list[SourceVimeo] = []
         for row in results:
-            output.append(SourceVimeo(
-                id=row["id"],
-                source_type=SourceType.VIMEO,
-                name=row["name"],
-                client_identifier=row["client_identifier"],
-                client_secret=row["client_secret"],
-                access_token=row["access_token"],
-                grid_view=row["grid_view"],
-            ))
+            output.append(
+                SourceVimeo(
+                    id=row["id"],
+                    source_type=SourceType.VIMEO,
+                    name=row["name"],
+                    client_identifier=row["client_identifier"],
+                    client_secret=row["client_secret"],
+                    access_token=row["access_token"],
+                    grid_view=row["grid_view"],
+                )
+            )
         return output
 
 
 class SourceVimeoDetailController(BaseController):
-    def __init__(self, token_data: AccessTokenData, source_vimeo_id: int):
+    def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
-        self.source_vimeo_id = source_vimeo_id
+        self.source_vimeo_id = source_id
 
     async def source_detail(self):
         result: Record = await self.db.select_one(
