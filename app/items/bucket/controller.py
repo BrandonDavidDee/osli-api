@@ -28,14 +28,17 @@ class ItemBucketListController(SourceBucketDetailController):
             LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
             LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id """
             placeholders = ", ".join(
-                f"${i}" for i in range(7, 7 + len(payload.tag_ids))
+                f"${i}" for i in range(8, 8 + len(payload.tag_ids))
             )
             query += f""" WHERE 
             (
-              ($3 = '') OR (i.notes ILIKE '%' || $4 || '%') OR (i.file_path ILIKE '%' || $5 || '%')
+              ($3 = '') 
+              OR (i.notes ILIKE '%' || $4 || '%') 
+              OR (i.file_path ILIKE '%' || $5 || '%')
+              OR (i.title ILIKE '%' || $6 || '%')
             ) 
             AND j.tag_id IN ({placeholders})
-            AND i.source_bucket_id = $6
+            AND i.source_bucket_id = $7
             """
             query += """ 
             GROUP BY i.id, source.title, source.bucket_name, source.media_prefix, source.grid_view
@@ -43,6 +46,7 @@ class ItemBucketListController(SourceBucketDetailController):
             values: tuple = (
                 payload.limit,
                 payload.offset,
+                payload.filter,
                 payload.filter,
                 payload.filter,
                 payload.filter,
@@ -60,12 +64,18 @@ class ItemBucketListController(SourceBucketDetailController):
             source.grid_view
             FROM item_bucket AS i
             LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
-            WHERE (($3 = '') OR i.notes ILIKE '%' || $4 || '%' OR i.file_path ILIKE '%' || $5 || '%')
-            AND i.source_bucket_id = $6
+            WHERE (
+            ($3 = '') 
+            OR (i.notes ILIKE '%' || $4 || '%') 
+            OR (i.file_path ILIKE '%' || $5 || '%')
+            OR (i.title ILIKE '%' || $6 || '%')
+            )
+            AND i.source_bucket_id = $7
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
                 payload.offset,
+                payload.filter,
                 payload.filter,
                 payload.filter,
                 payload.filter,

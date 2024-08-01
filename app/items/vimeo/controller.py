@@ -26,7 +26,7 @@ class ItemVimeoListController(SourceVimeoDetailController):
             LEFT JOIN source_vimeo AS source ON source.id = i.source_vimeo_id
             LEFT JOIN tag_item_vimeo as j ON j.item_vimeo_id = i.id """
             placeholders = ", ".join(
-                f"${i}" for i in range(7, 7 + len(payload.tag_ids))
+                f"${i}" for i in range(8, 8 + len(payload.tag_ids))
             )
             query += f""" WHERE 
             (
@@ -40,7 +40,8 @@ class ItemVimeoListController(SourceVimeoDetailController):
             """
             query += """ 
             GROUP BY 
-            i.id, source.title, source.client_identifier, source.client_secret, source.access_token, source.grid_view
+            i.id, source.title, source.client_identifier, 
+            source.client_secret, source.access_token, source.grid_view
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
