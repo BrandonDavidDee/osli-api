@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship, backref
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -22,7 +22,7 @@ class SourceBucket(Base):
     __tablename__ = "source_bucket"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    title = Column(String, nullable=False)
     bucket_name = Column(String, nullable=False)
     access_key_id = Column(String, nullable=False)
     secret_access_key = Column(String, nullable=False)
@@ -34,7 +34,7 @@ class SourceVimeo(Base):
     __tablename__ = "source_vimeo"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    title = Column(String, nullable=False)
     client_identifier = Column(String, nullable=False)
     client_secret = Column(String, nullable=False)
     access_token = Column(String, nullable=False)
@@ -54,6 +54,7 @@ class ItemBucket(Base):
         ),
         nullable=False,
     )
+    title = Column(String)
     mime_type = Column(String(100))
     file_path = Column(String, nullable=False)
     file_size = Column(Integer)
@@ -76,6 +77,7 @@ class ItemVimeo(Base):
         nullable=False,
     )
     video_id = Column(String, nullable=False)
+    title = Column(String)
     thumbnail = Column(String)
     notes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
@@ -127,3 +129,51 @@ class TagItemVimeo(Base):
         ),
         nullable=False,
     )
+
+
+class Gallery(Base):
+    __tablename__ = "gallery"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by = Column(String, nullable=True)
+    items = relationship("GalleryItem", back_populates="gallery", cascade="all, delete-orphan")
+
+
+class GalleryItem(Base):
+    __tablename__ = "gallery_item"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gallery_id = Column(
+        Integer,
+        ForeignKey(
+            "gallery.id",
+            name="gallery_item_gallery_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    item_bucket_id = Column(
+        Integer,
+        ForeignKey(
+            "item_bucket.id",
+            name="gallery_item_item_bucket_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
+    item_vimeo_id = Column(
+        Integer,
+        ForeignKey(
+            "item_vimeo.id",
+            name="gallery_item_item_vimeo_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
+    order = Column(Integer, nullable=False)
+    gallery = relationship("Gallery", back_populates="items")
+    item_bucket = relationship("ItemBucket", backref=backref("gallery_items", cascade="all, delete-orphan"))
+    item_vimeo = relationship("ItemVimeo", backref=backref("gallery_items", cascade="all, delete-orphan"))

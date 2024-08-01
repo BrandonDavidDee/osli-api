@@ -10,6 +10,6 @@ class SourceType(str, Enum):
 
 class SourceBase(BaseModel):
     id: int
-    name: str
+    title: str
     grid_view: bool = False
     source_type: SourceType

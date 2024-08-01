@@ -19,7 +19,7 @@ class SourcesVimeoController(BaseController):
                 SourceVimeo(
                     id=row["id"],
                     source_type=SourceType.VIMEO,
-                    name=row["name"],
+                    title=row["title"],
                     client_identifier=row["client_identifier"],
                     client_secret=row["client_secret"],
                     access_token=row["access_token"],
@@ -43,7 +43,7 @@ class SourceVimeoDetailController(BaseController):
         return SourceVimeo(
             id=result["id"],
             source_type=SourceType.VIMEO,
-            name=result["name"],
+            title=result["title"],
             client_identifier=result["client_identifier"],
             client_secret=result["client_secret"],
             access_token=result["access_token"],

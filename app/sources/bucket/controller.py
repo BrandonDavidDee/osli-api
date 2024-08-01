@@ -21,7 +21,7 @@ class SourceBucketController(BaseController):
                 SourceBucket(
                     id=row["id"],
                     source_type=SourceType.BUCKET,
-                    name=row["name"],
+                    title=row["title"],
                     bucket_name=row["bucket_name"],
                     media_prefix=row["media_prefix"],
                     grid_view=row["grid_view"],
@@ -44,7 +44,7 @@ class SourceBucketDetailController(BaseController):
         return SourceBucket(
             id=result["id"],
             source_type=SourceType.BUCKET,
-            name=result["name"],
+            title=result["title"],
             bucket_name=result["bucket_name"],
             media_prefix=result["media_prefix"],
             grid_view=result["grid_view"],

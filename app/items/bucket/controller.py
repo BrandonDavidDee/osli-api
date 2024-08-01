@@ -20,7 +20,7 @@ class ItemBucketListController(SourceBucketDetailController):
             query = """SELECT
             count(*) OVER () AS total_count,
             i.*,
-            sc.name,
+            sc.title as source_title,
             sc.bucket_name,
             sc.media_prefix,
             sc.grid_view
@@ -38,7 +38,7 @@ class ItemBucketListController(SourceBucketDetailController):
             AND i.source_bucket_id = $6
             """
             query += """ 
-            GROUP BY i.id, sc.name, sc.bucket_name, sc.media_prefix, sc.grid_view
+            GROUP BY i.id, sc.title, sc.bucket_name, sc.media_prefix, sc.grid_view
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
@@ -54,7 +54,7 @@ class ItemBucketListController(SourceBucketDetailController):
             query = """SELECT
             count(*) OVER () AS total_count,
             i.*,
-            sc.name,
+            sc.title as source_title,
             sc.bucket_name,
             sc.media_prefix,
             sc.grid_view
@@ -80,7 +80,7 @@ class ItemBucketListController(SourceBucketDetailController):
             if row["source_bucket_id"]:
                 item.source = SourceBucket(
                     id=row["source_bucket_id"],
-                    name=row["name"],
+                    title=row["source_title"],
                     bucket_name=row["bucket_name"],
                     media_prefix=row["media_prefix"],
                     grid_view=row["grid_view"],
@@ -112,7 +112,7 @@ class ItemBucketDetailController(BaseController):
     async def item_detail(self):
         query = """SELECT 
         i.*,
-        sc.name,
+        sc.title as source_title,
         sc.bucket_name,
         sc.media_prefix,
         sc.grid_view,
@@ -136,7 +136,7 @@ class ItemBucketDetailController(BaseController):
         item = ItemBucket(**base_row)
         item.source = SourceBucket(
             id=base_row["source_bucket_id"],
-            name=base_row["name"],
+            title=base_row["source_title"],
             bucket_name=base_row["bucket_name"],
             media_prefix=base_row["media_prefix"],
             grid_view=base_row["grid_view"],
