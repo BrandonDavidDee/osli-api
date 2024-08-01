@@ -12,8 +12,6 @@ class ItemTag(BaseModel):
 
 class ItemVimeo(ItemBase):
     title: str | None = None
-    mime_type: str | None = None
-    file_path: str
-    file_name: str | None = None
-    file_size: int | None = None
+    thumbnail: str | None = None
+    video_id: str
     source: SourceBucket | None = None

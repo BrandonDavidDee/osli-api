@@ -20,12 +20,12 @@ class ItemBucketListController(SourceBucketDetailController):
             query = """SELECT
             count(*) OVER () AS total_count,
             i.*,
-            sc.title as source_title,
-            sc.bucket_name,
-            sc.media_prefix,
-            sc.grid_view
+            source.title as source_title,
+            source.bucket_name,
+            source.media_prefix,
+            source.grid_view
             FROM item_bucket AS i
-            LEFT JOIN source_bucket AS sc ON sc.id = i.source_bucket_id
+            LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
             LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id """
             placeholders = ", ".join(
                 f"${i}" for i in range(7, 7 + len(payload.tag_ids))
@@ -38,7 +38,7 @@ class ItemBucketListController(SourceBucketDetailController):
             AND i.source_bucket_id = $6
             """
             query += """ 
-            GROUP BY i.id, sc.title, sc.bucket_name, sc.media_prefix, sc.grid_view
+            GROUP BY i.id, source.title, source.bucket_name, source.media_prefix, source.grid_view
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values: tuple = (
                 payload.limit,
@@ -54,12 +54,12 @@ class ItemBucketListController(SourceBucketDetailController):
             query = """SELECT
             count(*) OVER () AS total_count,
             i.*,
-            sc.title as source_title,
-            sc.bucket_name,
-            sc.media_prefix,
-            sc.grid_view
+            source.title as source_title,
+            source.bucket_name,
+            source.media_prefix,
+            source.grid_view
             FROM item_bucket AS i
-            LEFT JOIN source_bucket AS sc ON sc.id = i.source_bucket_id
+            LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
             WHERE (($3 = '') OR i.notes ILIKE '%' || $4 || '%' OR i.file_path ILIKE '%' || $5 || '%')
             AND i.source_bucket_id = $6
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
@@ -112,15 +112,15 @@ class ItemBucketDetailController(BaseController):
     async def item_detail(self):
         query = """SELECT 
         i.*,
-        sc.title as source_title,
-        sc.bucket_name,
-        sc.media_prefix,
-        sc.grid_view,
+        source.title as source_title,
+        source.bucket_name,
+        source.media_prefix,
+        source.grid_view,
         j.id as tag_item_id,
         tag.id as tag_id,
         tag.title as tag_title
         FROM item_bucket i 
-        LEFT JOIN source_bucket AS sc ON sc.id = i.source_bucket_id
+        LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
         LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
         WHERE i.id = $1

@@ -32,11 +32,11 @@ class SourcesVimeoController(BaseController):
 class SourceVimeoDetailController(BaseController):
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
-        self.source_vimeo_id = source_id
+        self.source_id = source_id
 
     async def source_detail(self):
         result: Record = await self.db.select_one(
-            "SELECT * FROM source_vimeo WHERE id = ($1)", self.source_vimeo_id
+            "SELECT * FROM source_vimeo WHERE id = ($1)", self.source_id
         )
         if not result:
             raise HTTPException(status_code=404)

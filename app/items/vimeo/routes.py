@@ -4,6 +4,7 @@ from fastapi import APIRouter, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
+from app.items.vimeo.controller import ItemVimeoListController
 from app.items.models import SearchParams
 
 router = APIRouter()
@@ -15,8 +16,6 @@ async def item_vimeo_list(
     payload: SearchParams,
     token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
-    return {
-        "source": None,
-        "total_count": 0,
-        "items": [],
-    }
+    controller = ItemVimeoListController(token_data, source_id)
+    return await controller.item_search(payload)
+
