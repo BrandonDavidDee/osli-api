@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import declarative_base, relationship, backref
+from sqlalchemy.orm import backref, declarative_base, relationship
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -139,7 +139,9 @@ class Gallery(Base):
     description = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by = Column(String, nullable=True)
-    items = relationship("GalleryItem", back_populates="gallery", cascade="all, delete-orphan")
+    items = relationship(
+        "GalleryItem", back_populates="gallery", cascade="all, delete-orphan"
+    )
 
 
 class GalleryItem(Base):
@@ -175,5 +177,9 @@ class GalleryItem(Base):
     )
     order = Column(Integer, nullable=False)
     gallery = relationship("Gallery", back_populates="items")
-    item_bucket = relationship("ItemBucket", backref=backref("gallery_items", cascade="all, delete-orphan"))
-    item_vimeo = relationship("ItemVimeo", backref=backref("gallery_items", cascade="all, delete-orphan"))
+    item_bucket = relationship(
+        "ItemBucket", backref=backref("gallery_items", cascade="all, delete-orphan")
+    )
+    item_vimeo = relationship(
+        "ItemVimeo", backref=backref("gallery_items", cascade="all, delete-orphan")
+    )

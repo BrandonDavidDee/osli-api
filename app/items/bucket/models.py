@@ -1,13 +1,5 @@
-from pydantic import BaseModel
-
 from app.items.models import ItemBase
 from app.sources.bucket.models import SourceBucket
-from app.tags.models import Tag
-
-
-class ItemTag(BaseModel):
-    id: int
-    tag: Tag
 
 
 class ItemBucket(ItemBase):

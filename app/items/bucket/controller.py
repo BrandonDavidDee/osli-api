@@ -3,8 +3,8 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.items.bucket.models import ItemBucket, ItemTag
-from app.items.models import SearchParams
+from app.items.bucket.models import ItemBucket
+from app.items.models import ItemTag, SearchParams
 from app.sources.bucket.controller import SourceBucketDetailController
 from app.sources.bucket.models import SourceBucket
 from app.sources.models import SourceType
