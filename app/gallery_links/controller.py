@@ -43,4 +43,5 @@ class GalleryLinkController:
         result = await self.db.select_many(query, self.link)
         if not result:
             raise HTTPException(status_code=404, detail="Link not found")
-        return self.assembly_stub.assemble_gallery(result, True)
+        use_link_title = bool(result[0]["link_title"])
+        return self.assembly_stub.assemble_gallery(result, use_link_title)
