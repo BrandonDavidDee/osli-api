@@ -20,6 +20,6 @@ class GalleryDetailController(BaseController):
     async def get_gallery_detail(self):
         query = "SELECT * FROM gallery WHERE id = $1"
         result = await self.db.select_one(query, self.gallery_id)
-        if self.token_data.username != result['created_by']:
-            raise HTTPException(status_code=404)
+        # if self.token_data.username != result['created_by']:
+        #     raise HTTPException(status_code=404)
         return result

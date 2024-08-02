@@ -21,5 +21,5 @@ class ItemBase(BaseModel):
     id: int | None = None
     notes: str | None = None
     date_created: datetime
-    created_by: str
+    created_by_id: int
     tags: list[ItemTag] = []

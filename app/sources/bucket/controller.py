@@ -67,7 +67,7 @@ class SourceBucketImportController(BaseController):
                     file_path, 
                     file_size, 
                     date_created, 
-                    created_by)
+                    created_by_id)
                     VALUES ($1, $2, $3, $4, $5, $6) 
                     RETURNING *"""
                     for obj in objects:

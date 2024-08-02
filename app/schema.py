@@ -9,36 +9,50 @@ class AuthUser(Base):
     __tablename__ = "auth_user"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
     notes = Column(String)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
     scopes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Relationships
+    created_buckets = relationship("SourceBucket", back_populates="creator")
+    created_videos = relationship("SourceVimeo", back_populates="creator")
+
 
 class SourceBucket(Base):
     __tablename__ = "source_bucket"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
+    title = Column(String(100), nullable=False)
     bucket_name = Column(String, nullable=False)
     access_key_id = Column(String, nullable=False)
     secret_access_key = Column(String, nullable=False)
     media_prefix = Column(String)
     grid_view = Column(Boolean, default=False)
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
+
+    # Relationships
+    creator = relationship("AuthUser", back_populates="created_buckets")
+    items = relationship("ItemBucket", back_populates="source_bucket")
 
 
 class SourceVimeo(Base):
     __tablename__ = "source_vimeo"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
+    title = Column(String(100), nullable=False)
     client_identifier = Column(String, nullable=False)
     client_secret = Column(String, nullable=False)
     access_token = Column(String, nullable=False)
     grid_view = Column(Boolean, default=False)
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
+
+    # Relationships
+    creator = relationship("AuthUser", back_populates="created_videos")
+    items = relationship("ItemVimeo", back_populates="source_vimeo")
 
 
 class ItemBucket(Base):
@@ -54,13 +68,17 @@ class ItemBucket(Base):
         ),
         nullable=False,
     )
-    title = Column(String)
+    title = Column(String(100))
     mime_type = Column(String(100))
     file_path = Column(String, nullable=False)
     file_size = Column(Integer)
     notes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(String, nullable=True)
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
+
+    # Relationships
+    source_bucket = relationship("SourceBucket", back_populates="items")
+    tags = relationship("TagItemBucket", back_populates="item_bucket")
 
 
 class ItemVimeo(Base):
@@ -76,19 +94,23 @@ class ItemVimeo(Base):
         ),
         nullable=False,
     )
-    video_id = Column(String, nullable=False)
-    title = Column(String)
+    video_id = Column(String(255), nullable=False)
+    title = Column(String(255))
     thumbnail = Column(String)
     notes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(String, nullable=True)
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
+
+    # Relationships
+    source_vimeo = relationship("SourceVimeo", back_populates="items")
+    tags = relationship("TagItemVimeo", back_populates="item_vimeo")
 
 
 class Tag(Base):
     __tablename__ = "tag"
 
     id = Column(Integer, primary_key=True)
-    title = Column(String, unique=True, index=True)
+    title = Column(String(50), unique=True, index=True, nullable=False)
 
 
 class TagItemBucket(Base):
@@ -110,6 +132,12 @@ class TagItemBucket(Base):
         nullable=False,
     )
 
+    # Relationships
+    tag = relationship(
+        "Tag", backref=backref("tagged_items_bucket", cascade="all, delete-orphan")
+    )
+    item_bucket = relationship("ItemBucket", back_populates="tags")
+
 
 class TagItemVimeo(Base):
     __tablename__ = "tag_item_vimeo"
@@ -130,6 +158,12 @@ class TagItemVimeo(Base):
         nullable=False,
     )
 
+    # Relationships
+    tag = relationship(
+        "Tag", backref=backref("tagged_items_vimeo", cascade="all, delete-orphan")
+    )
+    item_vimeo = relationship("ItemVimeo", back_populates="tags")
+
 
 class Gallery(Base):
     __tablename__ = "gallery"
@@ -138,7 +172,7 @@ class Gallery(Base):
     title = Column(String, nullable=False)
     description = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(String, nullable=True)
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
     items = relationship(
         "GalleryItem", back_populates="gallery", cascade="all, delete-orphan"
     )
