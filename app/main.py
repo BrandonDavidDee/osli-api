@@ -6,12 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.authentication import routes as auth
 from app.authentication.token import get_current_user
 from app.db import db
+from app.galleries import routes as galleries
+from app.gallery_links import routes as gallery_links
 from app.items import routes as items
 from app.sources import routes as sources
 from app.tags import routes as tags
 from app.users import routes as users
-from app.galleries import routes as galleries
-from app.gallery_links import routes as gallery_links
 
 
 @asynccontextmanager

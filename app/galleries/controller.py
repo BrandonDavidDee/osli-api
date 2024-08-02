@@ -1,8 +1,10 @@
 import os
+
 from asyncpg import Record
 from fastapi import HTTPException
-from app.controller import BaseController
+
 from app.authentication.models import AccessTokenData
+from app.controller import BaseController
 from app.galleries.models import Gallery, GalleryItem
 from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
@@ -17,14 +19,55 @@ class GalleryListController(BaseController):
         return await self.db.select_many(query)
 
 
+class GalleryAssemblyStub:
+    @staticmethod
+    def get_filename(path):
+        return os.path.basename(path)
+
+    def assemble_gallery(self, result: list[Record], use_link_title: bool = False):
+        base_row: Record = result[0]
+        title = base_row["link_title"] if use_link_title else base_row["title"]
+        gallery = Gallery(
+            id=base_row["id"],
+            title=title,
+            description=base_row["description"],
+            date_created=base_row["date_created"],
+        )
+        for row in result:
+            if row["gallery_item_id"]:
+                gallery_item = GalleryItem(
+                    id=row["gallery_item_id"], item_order=row["item_order"]
+                )
+                if row["item_bucket_id"]:
+                    item_bucket = ItemBucket(
+                        id=row["item_bucket_id"],
+                        mime_type=row["bucket_mime_type"],
+                        file_path=row["bucket_file_path"],
+                        file_size=row["bucket_file_size"],
+                        date_created=row["bucket_date_created"],
+                        created_by_id=row["bucket_created_by_id"],
+                    )
+                    item_bucket.file_name = self.get_filename(row["bucket_file_path"])
+                    gallery_item.item_bucket = item_bucket
+                if row["item_vimeo_id"]:
+                    item_vimeo = ItemVimeo(
+                        id=row["item_vimeo_id"],
+                        title=row["item_vimeo_title"],
+                        thumbnail=row["item_vimeo_thumbnail"],
+                        video_id=row["item_vimeo_video_id"],
+                        date_created=row["item_vimeo_date_created"],
+                        created_by_id=row["item_vimeo_created_by_id"],
+                    )
+                    gallery_item.item_vimeo = item_vimeo
+                gallery.items.append(gallery_item)
+        return gallery
+
+
 class GalleryDetailController(BaseController):
     def __init__(self, token_data: AccessTokenData, gallery_id: int):
         super().__init__(token_data)
         self.gallery_id = gallery_id
-
-    @staticmethod
-    def get_filename(path):
-        return os.path.basename(path)
+        self.assembly_stub = GalleryAssemblyStub()
 
     async def get_gallery_detail(self):
         query = """SELECT 
@@ -56,39 +99,4 @@ class GalleryDetailController(BaseController):
         result = await self.db.select_many(query, self.gallery_id)
         if not result:
             raise HTTPException(status_code=404)
-        base_row: Record = result[0]
-        gallery = Gallery(
-            id=base_row['id'],
-            title=base_row['title'],
-            description=base_row['description'],
-            date_created=base_row['date_created'],
-        )
-        for row in result:
-            if row['gallery_item_id']:
-                gallery_item = GalleryItem(
-                    id=row['gallery_item_id'],
-                    item_order=row['item_order']
-                )
-                if row['item_bucket_id']:
-                    item_bucket = ItemBucket(
-                        id=row['item_bucket_id'],
-                        mime_type=row['bucket_mime_type'],
-                        file_path=row['bucket_file_path'],
-                        file_size=row['bucket_file_size'],
-                        date_created=row['bucket_date_created'],
-                        created_by_id=row['bucket_created_by_id'],
-                    )
-                    item_bucket.file_name = self.get_filename(row["bucket_file_path"])
-                    gallery_item.item_bucket = item_bucket
-                if row['item_vimeo_id']:
-                    item_vimeo = ItemVimeo(
-                        id=row['item_vimeo_id'],
-                        title=row['item_vimeo_title'],
-                        thumbnail=row['item_vimeo_thumbnail'],
-                        video_id=row['item_vimeo_video_id'],
-                        date_created=row['item_vimeo_date_created'],
-                        created_by_id=row['item_vimeo_created_by_id'],
-                    )
-                    gallery_item.item_vimeo = item_vimeo
-                gallery.items.append(gallery_item)
-        return gallery
+        return self.assembly_stub.assemble_gallery(result)
