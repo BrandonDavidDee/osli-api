@@ -10,6 +10,8 @@ from app.db import db
 
 class BaseController:
     def __init__(self, token_data: AccessTokenData):
+        # token_data isn't really doing anything yet, but is being structured like this for
+        # multi-tenant database pooling and / or for possible permissions restrictions in the future.
         self.token_data = token_data
         self.db = db
 

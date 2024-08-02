@@ -173,6 +173,8 @@ class Gallery(Base):
     description = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"))
+
+    # Relationships
     items = relationship(
         "GalleryItem", back_populates="gallery", cascade="all, delete-orphan"
     )
@@ -209,7 +211,9 @@ class GalleryItem(Base):
         ),
         nullable=True,
     )
-    order = Column(Integer, nullable=False)
+    item_order = Column(Integer, nullable=False)
+
+    # Relationships
     gallery = relationship("Gallery", back_populates="items")
     item_bucket = relationship(
         "ItemBucket", backref=backref("gallery_items", cascade="all, delete-orphan")
@@ -217,3 +221,27 @@ class GalleryItem(Base):
     item_vimeo = relationship(
         "ItemVimeo", backref=backref("gallery_items", cascade="all, delete-orphan")
     )
+
+
+class GalleryLink(Base):
+    __tablename__ = "gallery_link"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gallery_id = Column(
+        Integer,
+        ForeignKey(
+            "gallery.id",
+            name="gallery_link_gallery_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    title = Column(String, nullable=True)  # optional
+    link = Column(String, nullable=False, unique=True)
+    expiration_date = Column(DateTime(timezone=True), nullable=True)
+    view_count = Column(Integer, default=0)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
+
+    # Relationships
+    gallery = relationship("Gallery", back_populates="links")

@@ -11,6 +11,7 @@ from app.sources import routes as sources
 from app.tags import routes as tags
 from app.users import routes as users
 from app.galleries import routes as galleries
+from app.gallery_links import routes as gallery_links
 
 
 @asynccontextmanager
@@ -46,6 +47,11 @@ app.include_router(
 app.include_router(
     galleries.router,
     prefix="/api/galleries",
+)
+
+app.include_router(
+    gallery_links.router,
+    prefix="/api/gallery-links",
 )
 
 app.include_router(
