@@ -10,6 +10,7 @@ from app.items import routes as items
 from app.sources import routes as sources
 from app.tags import routes as tags
 from app.users import routes as users
+from app.galleries import routes as galleries
 
 
 @asynccontextmanager
@@ -40,6 +41,11 @@ def app_root():
 app.include_router(
     auth.router,
     prefix="/api/authentication",
+)
+
+app.include_router(
+    galleries.router,
+    prefix="/api/galleries",
 )
 
 app.include_router(
