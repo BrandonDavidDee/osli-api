@@ -30,15 +30,15 @@ class GalleryListController(BaseController):
         output: list[Gallery] = []
         for row in results:
             gallery = Gallery(
-                id=row['id'],
-                title=row['title'],
-                description=row['description'],
-                date_created=row['date_created'],
+                id=row["id"],
+                title=row["title"],
+                description=row["description"],
+                date_created=row["date_created"],
                 created_by=User(
-                    id=row['user_id'],
-                    username=row['username'],
-                    is_active=row['user_is_active'],
-                )
+                    id=row["user_id"],
+                    username=row["username"],
+                    is_active=row["user_is_active"],
+                ),
             )
             output.append(gallery)
         return output
@@ -49,7 +49,9 @@ class GalleryAssemblyStub:
     def get_filename(path) -> str:
         return os.path.basename(path)
 
-    def assemble_gallery(self, result: list[Record], use_link_title: bool = False) -> Gallery:
+    def assemble_gallery(
+        self, result: list[Record], use_link_title: bool = False
+    ) -> Gallery:
         base_row: Record = result[0]
         title = base_row["link_title"] if use_link_title else base_row["title"]
         gallery = Gallery(
