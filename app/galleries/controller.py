@@ -7,10 +7,9 @@ from app.authentication.models import AccessTokenData
 from app.controller import BaseController
 from app.galleries.models import Gallery, GalleryItem
 from app.items.bucket.models import ItemBucket
-from app.sources.models import SourceType
-from app.sources.bucket.models import SourceBucket
-
 from app.items.vimeo.models import ItemVimeo
+from app.sources.bucket.models import SourceBucket
+from app.sources.models import SourceType
 
 
 class GalleryListController(BaseController):
@@ -51,7 +50,7 @@ class GalleryAssemblyStub:
                         created_by_id=row["bucket_created_by_id"],
                     )
                     item_bucket.file_name = self.get_filename(row["bucket_file_path"])
-                    if row['source_bucket_id']:
+                    if row["source_bucket_id"]:
                         item_bucket.source = SourceBucket(
                             id=row["source_bucket_id"],
                             title=row["source_bucket_title"],
