@@ -10,23 +10,46 @@ from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
 from app.sources.bucket.models import SourceBucket
 from app.sources.models import SourceType
+from app.users.models import User
 
 
 class GalleryListController(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
-    async def get_galleries(self):
-        query = "SELECT * FROM gallery"
-        return await self.db.select_many(query)
+    async def get_galleries(self) -> list[Gallery]:
+        query = """SELECT 
+        g.*,
+        u.id as user_id,
+        u.username,
+        u.is_active as user_is_active
+        FROM gallery AS g
+        LEFT JOIN auth_user AS u ON u.id = g.created_by_id
+        """
+        results: list[Record] = await self.db.select_many(query)
+        output: list[Gallery] = []
+        for row in results:
+            gallery = Gallery(
+                id=row['id'],
+                title=row['title'],
+                description=row['description'],
+                date_created=row['date_created'],
+                created_by=User(
+                    id=row['user_id'],
+                    username=row['username'],
+                    is_active=row['user_is_active'],
+                )
+            )
+            output.append(gallery)
+        return output
 
 
 class GalleryAssemblyStub:
     @staticmethod
-    def get_filename(path):
+    def get_filename(path) -> str:
         return os.path.basename(path)
 
-    def assemble_gallery(self, result: list[Record], use_link_title: bool = False):
+    def assemble_gallery(self, result: list[Record], use_link_title: bool = False) -> Gallery:
         base_row: Record = result[0]
         title = base_row["link_title"] if use_link_title else base_row["title"]
         gallery = Gallery(
@@ -79,7 +102,7 @@ class GalleryDetailController(BaseController):
         self.gallery_id = gallery_id
         self.assembly_stub = GalleryAssemblyStub()
 
-    async def get_gallery_detail(self):
+    async def get_gallery_detail(self) -> Gallery:
         query = """SELECT 
         g.*,
         gi.id as gallery_item_id,
@@ -110,7 +133,7 @@ class GalleryDetailController(BaseController):
         LEFT JOIN source_bucket AS sb ON sb.id = ib.source_bucket_id
         LEFT JOIN item_vimeo AS iv ON iv.id = gi.item_vimeo_id
         WHERE g.id = $1"""
-        result = await self.db.select_many(query, self.gallery_id)
+        result: list[Record] = await self.db.select_many(query, self.gallery_id)
         if not result:
             raise HTTPException(status_code=404)
         return self.assembly_stub.assemble_gallery(result)

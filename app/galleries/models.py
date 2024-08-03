@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
+from app.users.models import User
 
 
 class GalleryItem(BaseModel):
@@ -29,6 +30,6 @@ class Gallery(BaseModel):
     title: str
     description: str | None = None
     date_created: datetime | None = None
-    # created_by_id: int | None = None
+    created_by: User | None = None
     items: list[GalleryItem] = []
     links: list[GalleryLinks] = []
