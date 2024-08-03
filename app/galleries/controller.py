@@ -7,6 +7,9 @@ from app.authentication.models import AccessTokenData
 from app.controller import BaseController
 from app.galleries.models import Gallery, GalleryItem
 from app.items.bucket.models import ItemBucket
+from app.sources.models import SourceType
+from app.sources.bucket.models import SourceBucket
+
 from app.items.vimeo.models import ItemVimeo
 
 
@@ -48,6 +51,13 @@ class GalleryAssemblyStub:
                         created_by_id=row["bucket_created_by_id"],
                     )
                     item_bucket.file_name = self.get_filename(row["bucket_file_path"])
+                    if row['source_bucket_id']:
+                        item_bucket.source = SourceBucket(
+                            id=row["source_bucket_id"],
+                            title=row["source_bucket_title"],
+                            media_prefix=row["source_bucket_media_prefix"],
+                            source_type=SourceType.BUCKET,
+                        )
                     gallery_item.item_bucket = item_bucket
                 if row["item_vimeo_id"]:
                     item_vimeo = ItemVimeo(
@@ -60,6 +70,7 @@ class GalleryAssemblyStub:
                     )
                     gallery_item.item_vimeo = item_vimeo
                 gallery.items.append(gallery_item)
+        gallery.items.sort(key=lambda x: x.item_order)
         return gallery
 
 
@@ -83,6 +94,10 @@ class GalleryDetailController(BaseController):
         ib.date_created as bucket_date_created,
         ib.created_by_id as bucket_created_by_id,
         
+        sb.id as source_bucket_id,
+        sb.title as source_bucket_title,
+        sb.media_prefix as source_bucket_media_prefix,
+        
         iv.id as item_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
@@ -93,9 +108,9 @@ class GalleryDetailController(BaseController):
         FROM gallery AS g 
         LEFT JOIN gallery_item AS gi ON gi.gallery_id = g.id
         LEFT JOIN item_bucket AS ib ON ib.id = gi.item_bucket_id
+        LEFT JOIN source_bucket AS sb ON sb.id = ib.source_bucket_id
         LEFT JOIN item_vimeo AS iv ON iv.id = gi.item_vimeo_id
-        WHERE g.id = $1 ORDER BY gi.item_order
-        """
+        WHERE g.id = $1"""
         result = await self.db.select_many(query, self.gallery_id)
         if not result:
             raise HTTPException(status_code=404)

@@ -14,6 +14,16 @@ class GalleryItem(BaseModel):
     item_vimeo: Optional[ItemVimeo] = None
 
 
+class GalleryLinks(BaseModel):
+    id: int
+    title: str | None = None
+    link: str
+    expiration_date: datetime | None = None
+    view_count: int = 0
+    date_created: datetime
+    # created_by_id: int | None = None
+
+
 class Gallery(BaseModel):
     id: int | None = None
     title: str
@@ -21,3 +31,4 @@ class Gallery(BaseModel):
     date_created: datetime | None = None
     # created_by_id: int | None = None
     items: list[GalleryItem] = []
+    links: list[GalleryLinks] = []

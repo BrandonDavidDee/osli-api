@@ -27,6 +27,10 @@ class GalleryLinkController:
         ib.date_created as bucket_date_created,
         ib.created_by_id as bucket_created_by_id,
         
+        sb.id as source_bucket_id,
+        sb.title as source_bucket_title,
+        sb.media_prefix as source_bucket_media_prefix,
+        
         iv.id as item_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
@@ -37,6 +41,7 @@ class GalleryLinkController:
         LEFT JOIN gallery AS g ON g.id = gl.gallery_id
         LEFT JOIN gallery_item AS gi ON gi.gallery_id = g.id
         LEFT JOIN item_bucket AS ib ON ib.id = gi.item_bucket_id
+        LEFT JOIN source_bucket AS sb ON sb.id = ib.source_bucket_id
         LEFT JOIN item_vimeo AS iv ON iv.id = gi.item_vimeo_id
         WHERE gl.link = $1
         """
