@@ -63,7 +63,8 @@ class GalleryAssemblyStub:
         for row in result:
             if row["gallery_item_id"]:
                 gallery_item = GalleryItem(
-                    id=row["gallery_item_id"], item_order=row["item_order"]
+                    id=row["gallery_item_id"],
+                    item_order=row["item_order"],
                 )
                 if row["item_bucket_id"]:
                     item_bucket = ItemBucket(
@@ -82,6 +83,7 @@ class GalleryAssemblyStub:
                             media_prefix=row["source_bucket_media_prefix"],
                             source_type=SourceType.BUCKET,
                         )
+                    gallery_item.source_type = SourceType.BUCKET
                     gallery_item.item_bucket = item_bucket
                 if row["item_vimeo_id"]:
                     item_vimeo = ItemVimeo(
@@ -92,6 +94,7 @@ class GalleryAssemblyStub:
                         date_created=row["item_vimeo_date_created"],
                         created_by_id=row["item_vimeo_created_by_id"],
                     )
+                    gallery_item.source_type = SourceType.VIMEO
                     gallery_item.item_vimeo = item_vimeo
                 gallery.items.append(gallery_item)
         gallery.items.sort(key=lambda x: x.item_order)

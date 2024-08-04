@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.items.bucket.models import ItemBucket
+from app.sources.models import SourceType
 from app.items.vimeo.models import ItemVimeo
 from app.users.models import User
 
@@ -11,6 +12,7 @@ from app.users.models import User
 class GalleryItem(BaseModel):
     id: int
     item_order: int = 0
+    source_type: SourceType | None = None
     item_bucket: Optional[ItemBucket] = None
     item_vimeo: Optional[ItemVimeo] = None
 
