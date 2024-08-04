@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.items.bucket.models import ItemBucket
-from app.sources.models import SourceType
 from app.items.vimeo.models import ItemVimeo
+from app.sources.models import SourceType
 from app.users.models import User
 
 
@@ -17,14 +17,14 @@ class GalleryItem(BaseModel):
     item_vimeo: Optional[ItemVimeo] = None
 
 
-class GalleryLinks(BaseModel):
+class GalleryLink(BaseModel):
     id: int
     title: str | None = None
     link: str
     expiration_date: datetime | None = None
     view_count: int = 0
     date_created: datetime
-    # created_by_id: int | None = None
+    created_by: User | None = None
 
 
 class Gallery(BaseModel):
@@ -34,4 +34,4 @@ class Gallery(BaseModel):
     date_created: datetime | None = None
     created_by: User | None = None
     items: list[GalleryItem] = []
-    links: list[GalleryLinks] = []
+    links: list[GalleryLink] = []
