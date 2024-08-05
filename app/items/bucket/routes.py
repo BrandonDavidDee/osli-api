@@ -15,8 +15,8 @@ from app.items.models import SearchParams
 router = APIRouter()
 
 
-@router.post("/batch-upload")
-async def item_upload(
+@router.post("")
+async def item_batch_upload(
     source_id: int,
     files: list[UploadFile] = File(...),
     token_data: AccessTokenData = Depends(get_current_user),
@@ -25,7 +25,7 @@ async def item_upload(
     return await controller.s3_batch_upload(files=files)
 
 
-@router.post("")
+@router.post("/search")
 async def item_search(
     source_id: int,
     payload: SearchParams,

@@ -23,40 +23,6 @@ class BatchUploadController(S3ApiController):
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data, source_id)
 
-    async def s3_upload(self, file: UploadFile):
-        bucket_name: str = await self.initialize_s3_client()
-        try:
-            with file.file as f:
-                file_size = os.fstat(f.fileno()).st_size
-
-                safe_filename = self.make_safe_filename(file.filename)
-                key = f"{TEMP_KEY_PREFIX}/{safe_filename}"
-
-                content_type, _ = mimetypes.guess_type(file.filename)
-                if not content_type:
-                    content_type = "application/octet-stream"
-
-                self.s3_client.upload_fileobj(
-                    f, bucket_name, key, ExtraArgs={"ContentType": content_type}
-                )
-
-            query = """INSERT INTO item_bucket
-                (source_bucket_id, mime_type, file_path, file_size, date_created, created_by)
-                values ($1, $2, $3, $4, $5, $6) RETURNING *"""
-            values: tuple = (
-                self.source_id,
-                content_type,
-                key,
-                file_size,
-                self.now,
-                TEMP_CREATED_BY_ID,
-            )
-
-            result: Record = await self.db.insert(query, *values)
-            return ItemBucket(**result)
-        except Exception as e:
-            return {"error": f"An error occurred: {e}"}
-
     async def s3_batch_upload(self, files: list[UploadFile]):
         bucket_name: str = await self.initialize_s3_client()
         output = []
@@ -71,7 +37,7 @@ class BatchUploadController(S3ApiController):
                 content_type = "application/octet-stream"
 
             query = """INSERT INTO item_bucket
-            (source_bucket_id, mime_type, file_path, file_size, date_created, created_by)
+            (source_bucket_id, mime_type, file_path, file_size, date_created, created_by_id)
             values ($1, $2, $3, $4, $5, $6) RETURNING *"""
             values: tuple = (
                 self.source_id,
