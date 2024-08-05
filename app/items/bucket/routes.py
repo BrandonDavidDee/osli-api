@@ -1,10 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, File, Security, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.items.bucket.controller import (
+    BatchUploadController,
     ItemBucketDetailController,
     ItemBucketListController,
 )
@@ -12,6 +13,16 @@ from app.items.bucket.models import ItemBucket
 from app.items.models import SearchParams
 
 router = APIRouter()
+
+
+@router.post("/batch-upload")
+async def item_upload(
+    source_id: int,
+    files: list[UploadFile] = File(...),
+    token_data: AccessTokenData = Depends(get_current_user),
+):
+    controller = BatchUploadController(token_data, source_id)
+    return await controller.s3_batch_upload(files=files)
 
 
 @router.post("")

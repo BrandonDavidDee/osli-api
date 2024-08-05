@@ -86,26 +86,27 @@ class SourceBucketImportController(BaseController):
                     raise HTTPException(status_code=500, detail=str(exc))
 
     async def import_from_source(self):
-        record = await self.db.select_one(
-            "SELECT * FROM source_bucket WHERE id = ($1)", self.source_id
-        )
-        bucket_name = record["bucket_name"]
-        s3_client = self.get_s3_client(
-            record["access_key_id"], record["secret_access_key"]
-        )
-        paginator = s3_client.get_paginator("list_objects_v2")
-
-        output = []
-
-        for page in paginator.paginate(Bucket=bucket_name):
-            if "Contents" in page:
-                for obj in page["Contents"]:
-                    key = obj["Key"]
-                    mime_type = self.get_mime_type(key)
-                    obj_dict = {
-                        "key": key,
-                        "size": obj["Size"],
-                        "mime_type": mime_type,
-                    }
-                    output.append(obj_dict)
-        return await self.post_group(output)
+        # record = await self.db.select_one(
+        #     "SELECT * FROM source_bucket WHERE id = ($1)", self.source_id
+        # )
+        # bucket_name = record["bucket_name"]
+        # s3_client = self.get_s3_client(
+        #     record["access_key_id"], record["secret_access_key"]
+        # )
+        # paginator = s3_client.get_paginator("list_objects_v2")
+        #
+        # output = []
+        #
+        # for page in paginator.paginate(Bucket=bucket_name):
+        #     if "Contents" in page:
+        #         for obj in page["Contents"]:
+        #             key = obj["Key"]
+        #             mime_type = self.get_mime_type(key)
+        #             obj_dict = {
+        #                 "key": key,
+        #                 "size": obj["Size"],
+        #                 "mime_type": mime_type,
+        #             }
+        #             output.append(obj_dict)
+        # return await self.post_group(output)
+        pass

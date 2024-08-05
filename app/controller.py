@@ -1,7 +1,10 @@
 import mimetypes
 import os
+import random
+import string
+import urllib.parse
+from datetime import datetime, timezone
 
-import boto3
 from cryptography.fernet import Fernet
 
 from app.authentication.models import AccessTokenData
@@ -12,6 +15,7 @@ class BaseController:
     def __init__(self, token_data: AccessTokenData):
         # token_data isn't really doing anything yet, but is being structured like this for
         # multi-tenant database pooling and / or for possible permissions restrictions in the future.
+        self.now = datetime.now(tz=timezone.utc)
         self.token_data = token_data
         self.db = db
 
@@ -25,14 +29,6 @@ class BaseController:
         return mime_type
 
     @staticmethod
-    def get_s3_client(aws_access_key_id: str, aws_secret_access_key: str):
-        return boto3.client(
-            "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
-
-    @staticmethod
     def encrypt_api_key(api_key, passphrase):
         fernet = Fernet(passphrase)
         return fernet.encrypt(api_key.encode())
@@ -41,3 +37,18 @@ class BaseController:
     def decrypt_api_key(encrypted_api_key, passphrase):
         fernet = Fernet(passphrase)
         return fernet.decrypt(encrypted_api_key).decode()
+
+    @staticmethod
+    def random_generator(size=4, chars=string.ascii_uppercase + string.digits):
+        return "".join(random.choice(chars) for x in range(size))
+
+    def make_safe_filename(self, file_name):
+        base_name, extension = os.path.splitext(file_name)
+        # Omit random characters and swap spaces with underscores
+        safe_base_name = "".join(
+            c if c.isalnum() or c in ["-", "_"] else "_" for c in base_name
+        )
+        # then make it url safe just in case
+        url_safe_base_name = urllib.parse.quote_plus(safe_base_name)
+        random_string = self.random_generator()
+        return f"{url_safe_base_name}{random_string}{extension.lower()}"
