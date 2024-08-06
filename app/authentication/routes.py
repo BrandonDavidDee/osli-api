@@ -32,4 +32,4 @@ async def read_own_items(
         AccessTokenData, Security(get_current_user, scopes=["items"])
     ],
 ):
-    return [{"item_id": "Foo", "owner": token_data.username}]
+    return [{"item_id": "Foo", "owner": token_data.user_id}]

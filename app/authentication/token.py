@@ -59,11 +59,11 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        user_id: str = payload.get("sub")
+        if user_id is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
-        token_data = AccessTokenData(scopes=token_scopes, username=username)
+        token_data = AccessTokenData(scopes=token_scopes, user_id=user_id)
     except (JWTError, ValidationError):
         raise credentials_exception
 

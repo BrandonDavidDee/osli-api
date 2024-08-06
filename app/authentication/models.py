@@ -13,9 +13,9 @@ class TokenPair(BaseModel):
 
 
 class RefreshTokenData(BaseModel):
-    username: str
+    user_id: str
 
 
 class AccessTokenData(BaseModel):
-    username: str | None = None
+    user_id: str | None = None
     scopes: list[str] = []
