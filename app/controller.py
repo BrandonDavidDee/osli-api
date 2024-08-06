@@ -1,3 +1,4 @@
+import base64
 import mimetypes
 import os
 import random
@@ -9,6 +10,51 @@ from cryptography.fernet import Fernet
 
 from app.authentication.models import AccessTokenData
 from app.db import db
+
+
+class KeyEncryptionController:
+    def __init__(self):
+        self.api_key_salt: str | None = os.getenv("API_KEY_SALT")
+        self.api_secret_salt: str | None = os.getenv("API_SECRET_SALT")
+
+    @staticmethod
+    def encode_passphrase(key: str) -> bytes:
+        return base64.urlsafe_b64encode(key.ljust(32)[:32].encode())
+
+    def get_salt(self, salt) -> bytes:
+        if salt is None:
+            raise ValueError("No salt provided")
+        return self.encode_passphrase(salt)
+
+    def encrypt(self, data, passphrase, salt) -> str:
+        encoded_pass: bytes = self.encode_passphrase(passphrase)
+        encoded_salt: bytes = self.get_salt(salt)
+        fernet = Fernet(encoded_pass)
+        encrypted: bytes = fernet.encrypt(data.encode())
+        return base64.urlsafe_b64encode(encoded_salt + encrypted).decode("utf-8")
+
+    def decrypt(self, encrypted_data, passphrase, salt) -> str:
+        encoded_pass: bytes = self.encode_passphrase(passphrase)
+        encoded_salt: bytes = self.get_salt(salt)
+        encrypted_data: bytes = base64.urlsafe_b64decode(encrypted_data.encode("utf-8"))
+        extracted_salt = encrypted_data[:44]  # 32 bytes encoded to 44 characters
+        if extracted_salt != encoded_salt:
+            raise ValueError("Invalid salt")
+        encrypted = encrypted_data[44:]
+        fernet = Fernet(encoded_pass)
+        return fernet.decrypt(encrypted).decode()
+
+    def encrypt_api_key(self, api_key: str, passphrase: str) -> str:
+        return self.encrypt(api_key, passphrase, self.api_key_salt)
+
+    def encrypt_api_secret(self, api_key: str, passphrase: str) -> str:
+        return self.encrypt(api_key, passphrase, self.api_secret_salt)
+
+    def decrypt_api_key(self, encrypted_api_key: str, passphrase: str) -> str:
+        return self.decrypt(encrypted_api_key, passphrase, self.api_key_salt)
+
+    def decrypt_api_secret(self, encrypted_api_key: str, passphrase: str) -> str:
+        return self.decrypt(encrypted_api_key, passphrase, self.api_secret_salt)
 
 
 class BaseController:
@@ -27,16 +73,6 @@ class BaseController:
     def get_mime_type(filename):
         mime_type, _ = mimetypes.guess_type(filename, strict=False)
         return mime_type
-
-    @staticmethod
-    def encrypt_api_key(api_key, passphrase):
-        fernet = Fernet(passphrase)
-        return fernet.encrypt(api_key.encode())
-
-    @staticmethod
-    def decrypt_api_key(encrypted_api_key, passphrase):
-        fernet = Fernet(passphrase)
-        return fernet.decrypt(encrypted_api_key).decode()
 
     @staticmethod
     def random_generator(size=4, chars=string.ascii_uppercase + string.digits):
