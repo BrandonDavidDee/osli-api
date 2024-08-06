@@ -18,10 +18,11 @@ router = APIRouter()
 @router.post("")
 async def item_batch_upload(
     source_id: int,
+    encryption_key: str,
     files: list[UploadFile] = File(...),
     token_data: AccessTokenData = Depends(get_current_user),
 ):
-    controller = BatchUploadController(token_data, source_id)
+    controller = BatchUploadController(token_data, source_id, encryption_key)
     return await controller.s3_batch_upload(files=files)
 
 

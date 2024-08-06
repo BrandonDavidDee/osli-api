@@ -16,12 +16,13 @@ from app.sources.models import SourceType
 from app.tags.models import Tag
 
 TEMP_KEY_PREFIX = "dev-images"
-TEMP_CREATED_BY_ID = 1
 
 
 class BatchUploadController(S3ApiController):
-    def __init__(self, token_data: AccessTokenData, source_id: int):
-        super().__init__(token_data, source_id)
+    def __init__(
+        self, token_data: AccessTokenData, source_id: int, encryption_key: str
+    ):
+        super().__init__(token_data, source_id, encryption_key)
 
     async def s3_batch_upload(self, files: list[UploadFile]):
         bucket_name: str = await self.initialize_s3_client()
@@ -45,7 +46,7 @@ class BatchUploadController(S3ApiController):
                 key,
                 file_size,
                 self.now,
-                TEMP_CREATED_BY_ID,
+                int(self.token_data.user_id),
             )
             output.append(key)
 
