@@ -13,7 +13,7 @@ class SearchParams(BaseModel):
 
 
 class ItemTag(BaseModel):
-    id: int
+    id: int | None = None
     tag: Tag
 
 

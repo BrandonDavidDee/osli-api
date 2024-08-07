@@ -1,9 +1,8 @@
 import mimetypes
-import os
 
 from asyncpg import Record
 from botocore.exceptions import ClientError
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, Response, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
@@ -217,10 +216,27 @@ class ItemBucketDetailController(BaseController):
         return item
 
     async def item_update(self, payload: ItemBucket):
-        query = "UPDATE item_bucket SET notes = $1 WHERE id = $2 RETURNING *"
+        query = (
+            "UPDATE item_bucket SET title = $1, notes = $2 WHERE id = $3 RETURNING *"
+        )
         values: tuple = (
+            payload.title,
             payload.notes,
             self.item_id,
         )
         await self.db.insert(query, *values)
         return payload
+
+    async def item_tag_create(self, payload: ItemTag) -> ItemTag:
+        query = "INSERT INTO tag_item_bucket (tag_id, item_bucket_id) VALUES ($1, $2) RETURNING id"
+        values: tuple = (
+            payload.tag.id,
+            self.item_id,
+        )
+        result: Record = await self.db.insert(query, *values)
+        payload.id = result["id"]
+        return payload
+
+    async def item_tag_delete(self, tag_item_bucket_id: int) -> Response:
+        query = "DELETE FROM tag_item_bucket WHERE id = $1"
+        return await self.db.delete_one(query, tag_item_bucket_id)

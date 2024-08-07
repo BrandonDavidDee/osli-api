@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Security, UploadFile
+from fastapi import APIRouter, Depends, File, Response, Security, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -10,7 +10,7 @@ from app.items.bucket.controller import (
     ItemBucketListController,
 )
 from app.items.bucket.models import ItemBucket
-from app.items.models import SearchParams
+from app.items.models import ItemTag, SearchParams
 
 router = APIRouter()
 
@@ -50,3 +50,23 @@ async def item_update(
     token_data: AccessTokenData = Depends(get_current_user),
 ):
     return await ItemBucketDetailController(token_data, item_id).item_update(payload)
+
+
+@router.post("/{item_id}/tags")
+async def item_tag_create(
+    item_id: int,
+    payload: ItemTag,
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> ItemTag:
+    controller = ItemBucketDetailController(token_data, item_id)
+    return await controller.item_tag_create(payload)
+
+
+@router.delete("/{item_id}/tags/{tag_item_bucket_id}")
+async def item_tag_delete(
+    item_id: int,
+    tag_item_bucket_id: int,
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> Response:
+    controller = ItemBucketDetailController(token_data, item_id)
+    return await controller.item_tag_delete(tag_item_bucket_id)
