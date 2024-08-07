@@ -171,8 +171,9 @@ class ItemVimeoDetailController(BaseController):
         return item
 
     async def item_update(self, payload: ItemVimeo):
-        query = "UPDATE item_vimeo SET notes = $1 WHERE id = $2 RETURNING *"
+        query = "UPDATE item_vimeo SET title = $1, notes = $2 WHERE id = $3 RETURNING *"
         values: tuple = (
+            payload.title,
             payload.notes,
             self.item_id,
         )

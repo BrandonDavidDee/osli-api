@@ -6,7 +6,8 @@ import string
 import urllib.parse
 from datetime import datetime, timezone
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
+from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.db import db
@@ -42,7 +43,10 @@ class KeyEncryptionController:
             raise ValueError("Invalid salt")
         encrypted = encrypted_data[44:]
         fernet = Fernet(encoded_pass)
-        return fernet.decrypt(encrypted).decode()
+        try:
+            return fernet.decrypt(encrypted).decode()
+        except InvalidToken:
+            raise HTTPException(status_code=401, detail="Invalid passphrase")
 
     def encrypt_api_key(self, api_key: str, passphrase: str) -> str:
         return self.encrypt(api_key, passphrase, self.api_key_salt)
