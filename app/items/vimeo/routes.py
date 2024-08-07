@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Response, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
-from app.items.models import SearchParams
+from app.items.models import ItemTag, SearchParams
 from app.items.vimeo.controller import (
     ItemVimeoDetailController,
     ItemVimeoListController,
@@ -38,3 +38,23 @@ async def item_update(
     token_data: AccessTokenData = Depends(get_current_user),
 ):
     return await ItemVimeoDetailController(token_data, item_id).item_update(payload)
+
+
+@router.post("/{item_id}/tags")
+async def item_tag_create(
+    item_id: int,
+    payload: ItemTag,
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> ItemTag:
+    controller = ItemVimeoDetailController(token_data, item_id)
+    return await controller.item_tag_create(payload)
+
+
+@router.delete("/{item_id}/tags/{tag_item_vimeo_id}")
+async def item_tag_delete(
+    item_id: int,
+    tag_item_vimeo_id: int,
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> Response:
+    controller = ItemVimeoDetailController(token_data, item_id)
+    return await controller.item_tag_delete(tag_item_vimeo_id)
