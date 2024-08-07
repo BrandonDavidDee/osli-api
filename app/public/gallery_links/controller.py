@@ -13,12 +13,12 @@ class GalleryLinkController:
     async def get_gallery_link(self):
         query = """SELECT 
         gl.title as public_link_title,
-        
+
         g.*,
-        
+
         gi.id as gallery_item_id,
         gi.item_order,
-        
+
         ib.id as item_bucket_id,
         ib.title as bucket_title,
         ib.mime_type as bucket_mime_type,
@@ -26,11 +26,11 @@ class GalleryLinkController:
         ib.file_size as bucket_file_size,
         ib.date_created as bucket_date_created,
         ib.created_by_id as bucket_created_by_id,
-        
+
         sb.id as source_bucket_id,
         sb.title as source_bucket_title,
         sb.media_prefix as source_bucket_media_prefix,
-        
+
         iv.id as item_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.gallery_links.controller import GalleryLinkController
+from app.public.gallery_links.controller import GalleryLinkController
 
 router = APIRouter()
 
