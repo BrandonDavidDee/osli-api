@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from app.db import db
-from app.galleries.controller import GalleryAssemblyStub
+from app.galleries.controllers.gallery_detail import GalleryAssemblyStub
 
 
 class GalleryLinkController:

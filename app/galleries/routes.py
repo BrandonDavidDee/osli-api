@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
-from app.galleries.controller import GalleryDetailController, GalleryListController
+from app.galleries.controllers.gallery_detail import GalleryDetailController
+from app.galleries.controllers.gallery_list import GalleryListController
 
 router = APIRouter()
 

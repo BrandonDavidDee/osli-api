@@ -6,7 +6,7 @@ from app.controller import BaseController
 from app.items.models import ItemTag, SearchParams
 from app.items.vimeo.models import ItemVimeo
 from app.sources.models import SourceType
-from app.sources.vimeo.controller import SourceVimeoDetailController
+from app.sources.vimeo.controllers.vimeo_detail import SourceVimeoDetailController
 from app.sources.vimeo.models import SourceVimeo
 from app.tags.models import Tag
 

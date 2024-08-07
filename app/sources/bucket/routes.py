@@ -4,11 +4,9 @@ from fastapi import APIRouter, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
-from app.sources.bucket.controller import (
-    SourceBucketController,
-    SourceBucketDetailController,
-    SourceBucketImportController,
-)
+from app.sources.bucket.controllers.bucket_detail import SourceBucketDetailController
+from app.sources.bucket.controllers.bucket_list import SourceBucketListController
+from app.sources.bucket.controllers.s3_api import S3ApiController
 
 router = APIRouter()
 
@@ -19,7 +17,7 @@ async def source_list(
         AccessTokenData, Security(get_current_user, scopes=["source_list"])
     ],
 ):
-    return await SourceBucketController(token_data).get_list()
+    return await SourceBucketListController(token_data).get_list()
 
 
 @router.get("/{source_id}")
@@ -33,10 +31,13 @@ async def source_detail(
 
 @router.get("/{source_id}/import")
 async def source_import(
+    encryption_key: str,
     source_id: int,
     token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
     # TODO: this function needs a way to filter out directories, extensions and mime types
-    return await SourceBucketImportController(
-        token_data, source_id
+    return await S3ApiController(
+        token_data,
+        source_id,
+        encryption_key,
     ).import_from_source()

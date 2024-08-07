@@ -1,5 +1,6 @@
 import boto3
 from asyncpg import Record
+from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController, KeyEncryptionController
@@ -36,3 +37,51 @@ class S3ApiController(BaseController):
             aws_secret_access_key=decrypted_secret,
         )
         return source["bucket_name"]
+
+    async def post_group(self, objects: list[dict]):
+        output: list[dict] = []
+        async with self.db.pool.acquire() as connection:
+            async with connection.transaction():
+                try:
+                    query = """INSERT INTO item
+                    (source_bucket_id, 
+                    mime_type, 
+                    file_path, 
+                    file_size, 
+                    date_created, 
+                    created_by_id)
+                    VALUES ($1, $2, $3, $4, $5, $6) 
+                    RETURNING *"""
+                    for obj in objects:
+                        values: tuple = (
+                            self.source_id,
+                            obj["mime_type"],
+                            obj["key"],
+                            obj["size"],
+                            self.now,
+                            self.token_data.user_id,
+                        )
+                        result = await connection.fetchrow(query, *values)
+                        output.append(dict(result))
+                    return output
+                except Exception as exc:
+                    raise HTTPException(status_code=500, detail=str(exc))
+
+    async def import_from_source(self):
+        bucket_name: str = await self.initialize_s3_client()
+        paginator = self.s3_client.get_paginator("list_objects_v2")
+
+        output = []
+
+        for page in paginator.paginate(Bucket=bucket_name):
+            if "Contents" in page:
+                for obj in page["Contents"]:
+                    key = obj["Key"]
+                    mime_type = self.get_mime_type(key)
+                    obj_dict = {
+                        "key": key,
+                        "size": obj["Size"],
+                        "mime_type": mime_type,
+                    }
+                    output.append(obj_dict)
+        return await self.post_group(output)
