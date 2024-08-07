@@ -240,6 +240,7 @@ class GalleryLink(Base):
     link = Column(String, nullable=False, unique=True)
     expiration_date = Column(DateTime(timezone=True), nullable=True)
     view_count = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"))
 

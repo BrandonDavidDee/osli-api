@@ -4,6 +4,7 @@ import os
 import random
 import string
 import urllib.parse
+import uuid
 from datetime import datetime, timezone
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -68,6 +69,10 @@ class BaseController:
         self.now = datetime.now(tz=timezone.utc)
         self.token_data = token_data
         self.db = db
+
+    @staticmethod
+    def generate_link():
+        return str(uuid.uuid4())
 
     @staticmethod
     def get_filename(path):

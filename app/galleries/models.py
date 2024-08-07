@@ -18,12 +18,12 @@ class GalleryItem(BaseModel):
 
 
 class GalleryLink(BaseModel):
-    id: int
+    id: int | None = None
     title: str | None = None
     link: str
     expiration_date: datetime | None = None
     view_count: int = 0
-    date_created: datetime
+    date_created: datetime | None = None
     created_by: User | None = None
 
 
