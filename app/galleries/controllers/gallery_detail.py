@@ -10,6 +10,7 @@ from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
 from app.sources.bucket.models import SourceBucket
 from app.sources.models import SourceType
+from app.users.models import User
 
 
 class GalleryAssemblyStub:
@@ -33,6 +34,11 @@ class GalleryAssemblyStub:
             title=title,
             description=base_row["description"],
             date_created=base_row["date_created"],
+            created_by=User(
+                id=base_row["user_id"],
+                username=base_row["username"],
+                is_active=base_row["user_is_active"],
+            ),
         )
         for row in result:
             gallery_item_id = row["gallery_item_id"]
@@ -88,6 +94,11 @@ class GalleryDetailController(BaseController):
     async def get_gallery_detail(self) -> Gallery:
         query = """SELECT 
         g.*,
+        
+        u.id as user_id,
+        u.username,
+        u.is_active as user_is_active,
+        
         gi.id as gallery_item_id,
         gi.item_order,
 
@@ -111,6 +122,8 @@ class GalleryDetailController(BaseController):
         iv.created_by_id as item_vimeo_created_by_id
 
         FROM gallery AS g 
+        LEFT JOIN auth_user AS u ON u.id = g.created_by_id
+        
         LEFT JOIN gallery_item AS gi ON gi.gallery_id = g.id
         LEFT JOIN item_bucket AS ib ON ib.id = gi.item_bucket_id
         LEFT JOIN source_bucket AS sb ON sb.id = ib.source_bucket_id

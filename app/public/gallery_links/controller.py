@@ -15,6 +15,10 @@ class GalleryLinkController:
         gl.title as public_link_title,
 
         g.*,
+        
+        u.id as user_id,
+        u.username,
+        u.is_active as user_is_active,
 
         gi.id as gallery_item_id,
         gi.item_order,
@@ -39,6 +43,7 @@ class GalleryLinkController:
         iv.created_by_id as item_vimeo_created_by_id
         FROM gallery_link AS gl 
         LEFT JOIN gallery AS g ON g.id = gl.gallery_id
+        LEFT JOIN auth_user AS u ON u.id = g.created_by_id
         LEFT JOIN gallery_item AS gi ON gi.gallery_id = g.id
         LEFT JOIN item_bucket AS ib ON ib.id = gi.item_bucket_id
         LEFT JOIN source_bucket AS sb ON sb.id = ib.source_bucket_id
