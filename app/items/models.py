@@ -22,9 +22,9 @@ class ItemLink(BaseModel):
     id: int | None = None
     title: str | None = None
     link: str
-    expiration_date: datetime | None = None
+    expiration_date: date | None = None
     view_count: int = 0
-    date_created: date | None = None
+    date_created: datetime | None = None
     created_by: User | None = None
 
 

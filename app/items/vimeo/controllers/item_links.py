@@ -40,7 +40,7 @@ class ItemVimeoLinkController(ItemLinkController):
         u.username,
         u.is_active as user_is_active
         FROM item_vimeo AS i 
-        LEFT JOIN item_link AS il ON il.item_bucket_id = i.id
+        LEFT JOIN item_link AS il ON il.item_vimeo_id = i.id
         LEFT JOIN auth_user AS u ON u.id = il.created_by_id
         WHERE i.id = $1"""
         result: list[Record] = await self.db.select_many(query, self.item_id)
