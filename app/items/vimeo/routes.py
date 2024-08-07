@@ -5,10 +5,9 @@ from fastapi import APIRouter, Depends, Response, Security
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.items.models import ItemTag, SearchParams
-from app.items.vimeo.controller import (
-    ItemVimeoDetailController,
-    ItemVimeoListController,
-)
+from app.items.vimeo.controllers.item_detail import ItemVimeoDetailController
+from app.items.vimeo.controllers.item_list import ItemVimeoListController
+from app.items.vimeo.controllers.item_tags import ItemVimeoTagsController
 from app.items.vimeo.models import ItemVimeo
 
 router = APIRouter()
@@ -46,7 +45,7 @@ async def item_tag_create(
     payload: ItemTag,
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> ItemTag:
-    controller = ItemVimeoDetailController(token_data, item_id)
+    controller = ItemVimeoTagsController(token_data, item_id)
     return await controller.item_tag_create(payload)
 
 
@@ -56,5 +55,5 @@ async def item_tag_delete(
     tag_item_vimeo_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> Response:
-    controller = ItemVimeoDetailController(token_data, item_id)
+    controller = ItemVimeoTagsController(token_data, item_id)
     return await controller.item_tag_delete(tag_item_vimeo_id)

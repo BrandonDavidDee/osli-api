@@ -4,11 +4,10 @@ from fastapi import APIRouter, Depends, File, Response, Security, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
-from app.items.bucket.controller import (
-    BatchUploadController,
-    ItemBucketDetailController,
-    ItemBucketListController,
-)
+from app.items.bucket.controllers.item_detail import ItemBucketDetailController
+from app.items.bucket.controllers.item_list import ItemBucketListController
+from app.items.bucket.controllers.item_tags import ItemBucketTagController
+from app.items.bucket.controllers.item_upload import BatchUploadController
 from app.items.bucket.models import ItemBucket
 from app.items.models import ItemTag, SearchParams
 
@@ -58,7 +57,7 @@ async def item_tag_create(
     payload: ItemTag,
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> ItemTag:
-    controller = ItemBucketDetailController(token_data, item_id)
+    controller = ItemBucketTagController(token_data, item_id)
     return await controller.item_tag_create(payload)
 
 
@@ -68,5 +67,5 @@ async def item_tag_delete(
     tag_item_bucket_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> Response:
-    controller = ItemBucketDetailController(token_data, item_id)
+    controller = ItemBucketTagController(token_data, item_id)
     return await controller.item_tag_delete(tag_item_bucket_id)
