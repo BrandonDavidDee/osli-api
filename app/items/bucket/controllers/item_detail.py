@@ -1,5 +1,5 @@
 from asyncpg import Record
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController

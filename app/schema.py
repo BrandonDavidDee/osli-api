@@ -1,4 +1,13 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 Base = declarative_base()
@@ -238,7 +247,7 @@ class GalleryLink(Base):
     )
     title = Column(String, nullable=True)  # optional
     link = Column(String, nullable=False, unique=True)
-    expiration_date = Column(DateTime(timezone=True), nullable=True)
+    expiration_date = Column(Date, nullable=True)
     view_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
@@ -246,3 +255,42 @@ class GalleryLink(Base):
 
     # Relationships
     gallery = relationship("Gallery", back_populates="links")
+
+
+class ItemLink(Base):
+    __tablename__ = "item_link"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_bucket_id = Column(
+        Integer,
+        ForeignKey(
+            "item_bucket.id",
+            name="item_link_item_bucket_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
+    item_vimeo_id = Column(
+        Integer,
+        ForeignKey(
+            "item_vimeo.id",
+            name="item_link_item_vimeo_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
+    title = Column(String, nullable=True)  # optional
+    link = Column(String, nullable=False, unique=True)
+    expiration_date = Column(Date, nullable=True)
+    view_count = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
+
+    # Relationships
+    item_bucket = relationship(
+        "ItemBucket", backref=backref("links", cascade="all, delete-orphan")
+    )
+    item_vimeo = relationship(
+        "ItemVimeo", backref=backref("links", cascade="all, delete-orphan")
+    )
