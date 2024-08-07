@@ -22,6 +22,7 @@ class ItemLinkController(BaseController):
             title=row["link_title"],
             link=link,
             expiration_date=row["link_expiration_date"],
+            is_active=bool(row["link_is_active"]),
             view_count=view_count,
             date_created=row["link_date_created"],
             created_by=User(
@@ -45,9 +46,12 @@ class ItemLinkController(BaseController):
         return f"{base}/#/share/item/{link}"
 
     async def item_link_update(self, item_link_id: int, payload: ItemLink):
-        query = "UPDATE item_link SET title = $1 WHERE id = $2 RETURNING *"
+        query = (
+            "UPDATE item_link SET title = $1, is_active = $2 WHERE id = $3 RETURNING *"
+        )
         values: tuple = (
             payload.title,
+            payload.is_active,
             item_link_id,
         )
         result: Record = await self.db.insert(query, *values)

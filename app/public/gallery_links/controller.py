@@ -13,6 +13,7 @@ class GalleryLinkController:
     async def get_gallery_link(self):
         query = """SELECT 
         gl.title as public_link_title,
+        gl.is_active,
 
         g.*,
         
@@ -53,5 +54,8 @@ class GalleryLinkController:
         result = await self.db.select_many(query, self.link)
         if not result:
             raise HTTPException(status_code=404, detail="Link not found")
+        is_active = bool(result[0]["is_active"])
+        if not is_active:
+            raise HTTPException(status_code=404, detail="Link not active")
         use_link_title = bool(result[0]["public_link_title"])
         return self.assembly_stub.assemble_gallery(result, use_link_title)

@@ -45,6 +45,7 @@ class GalleryLinkController(BaseController):
         gl.expiration_date as link_expiration_date,
         gl.view_count as link_view_count,
         gl.date_created as link_date_created,
+        gl.is_active as link_is_active,
         u.id as user_id,
         u.username,
         u.is_active as user_is_active
@@ -77,6 +78,7 @@ class GalleryLinkController(BaseController):
                 link=link,
                 expiration_date=row["link_expiration_date"],
                 view_count=view_count,
+                is_active=bool(row["link_is_active"]),
                 date_created=row["link_date_created"],
                 created_by=User(
                     id=row["user_id"],
@@ -91,9 +93,10 @@ class GalleryLinkController(BaseController):
         return gallery
 
     async def gallery_link_update(self, gallery_link_id: int, payload: GalleryLink):
-        query = "UPDATE gallery_link SET title = $1 WHERE id = $2 RETURNING *"
+        query = "UPDATE gallery_link SET title = $1, is_active = $2 WHERE id = $3 RETURNING *"
         values: tuple = (
             payload.title,
+            payload.is_active,
             gallery_link_id,
         )
         result: Record = await self.db.insert(query, *values)

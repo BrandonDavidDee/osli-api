@@ -23,6 +23,7 @@ class GalleryLink(BaseModel):
     link: str
     expiration_date: date | None = None
     view_count: int = 0
+    is_active: bool = False
     date_created: datetime | None = None
     created_by: User | None = None
 
