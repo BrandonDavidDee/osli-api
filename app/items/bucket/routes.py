@@ -22,8 +22,8 @@ async def item_batch_upload(
     files: list[UploadFile] = File(...),
     token_data: AccessTokenData = Depends(get_current_user),
 ):
-    controller = BatchUploadController(token_data, source_id, encryption_key)
-    return await controller.s3_batch_upload(files=files)
+    controller = BatchUploadController(token_data, source_id)
+    return await controller.s3_batch_upload(encryption_key=encryption_key, files=files)
 
 
 @router.post("/search")

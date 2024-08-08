@@ -7,12 +7,9 @@ from app.controller import BaseController, KeyEncryptionController
 
 
 class S3ApiController(BaseController):
-    def __init__(
-        self, token_data: AccessTokenData, source_id: int, encryption_key: str
-    ):
+    def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
         self.source_id = source_id
-        self.encryption_key = encryption_key
         self.s3_client = None
         self.encryption = KeyEncryptionController()
 
@@ -22,14 +19,14 @@ class S3ApiController(BaseController):
         )
         return record
 
-    async def initialize_s3_client(self) -> str:
+    async def initialize_s3_client(self, encryption_key: str) -> str:
         # Create s3 client, add to class attribute and return source bucket name
         source: Record = await self.get_source_record()
         decrypted_access_key_id = self.encryption.decrypt_api_key(
-            source["access_key_id"], self.encryption_key
+            source["access_key_id"], encryption_key
         )
         decrypted_secret = self.encryption.decrypt_api_secret(
-            source["secret_access_key"], self.encryption_key
+            source["secret_access_key"], encryption_key
         )
         self.s3_client = boto3.client(
             "s3",
@@ -68,6 +65,7 @@ class S3ApiController(BaseController):
                     raise HTTPException(status_code=500, detail=str(exc))
 
     async def import_from_source(self):
+        # TODO: this method needs a way to filter out directories, extensions and mime types
         bucket_name: str = await self.initialize_s3_client()
         paginator = self.s3_client.get_paginator("list_objects_v2")
 
@@ -85,3 +83,16 @@ class S3ApiController(BaseController):
                     }
                     output.append(obj_dict)
         return await self.post_group(output)
+
+    async def temporary_show_keys(self):
+        source: Record = await self.get_source_record()
+        decrypted_access_key_id = self.encryption.decrypt_api_key(
+            source["access_key_id"], self.encryption_key
+        )
+        decrypted_secret = self.encryption.decrypt_api_secret(
+            source["secret_access_key"], self.encryption_key
+        )
+        return {
+            "access_key_id": decrypted_access_key_id,
+            "secret_access_key": decrypted_secret,
+        }

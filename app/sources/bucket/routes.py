@@ -6,7 +6,7 @@ from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.sources.bucket.controllers.bucket_detail import SourceBucketDetailController
 from app.sources.bucket.controllers.bucket_list import SourceBucketListController
-from app.sources.bucket.controllers.s3_api import S3ApiController
+from app.sources.bucket.models import SourceBucket
 
 router = APIRouter()
 
@@ -29,15 +29,12 @@ async def source_detail(
     return await controller.source_detail()
 
 
-@router.get("/{source_id}/import")
-async def source_import(
-    encryption_key: str,
+@router.put("/{source_id}")
+async def source_update(
     source_id: int,
+    passphrase: str,
+    payload: SourceBucket,
     token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
-    # TODO: this function needs a way to filter out directories, extensions and mime types
-    return await S3ApiController(
-        token_data,
-        source_id,
-        encryption_key,
-    ).import_from_source()
+    controller = SourceBucketDetailController(token_data, source_id)
+    return await controller.source_update(passphrase, payload)
