@@ -9,12 +9,9 @@ from app.controller import BaseController, KeyEncryptionController
 
 
 class VimeoApiController(BaseController):
-    def __init__(
-        self, token_data: AccessTokenData, source_id: int, encryption_key: str
-    ):
+    def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data)
         self.source_id = source_id
-        self.encryption_key = encryption_key
         self.encryption = KeyEncryptionController()
 
     async def get_source_record(self) -> Record:
@@ -23,16 +20,16 @@ class VimeoApiController(BaseController):
         )
         return record
 
-    async def get_vimeo_access_token(self):
+    async def get_vimeo_access_token(self, encryption_key: str):
         source: Record = await self.get_source_record()
         encrypted_access_token = source["access_token"]
         return self.encryption.decrypt_access_token(
-            encrypted_access_token, self.encryption_key
+            encrypted_access_token, encryption_key
         )
 
-    async def get_thumbnails(self, video_id: str | int) -> str:
+    async def get_thumbnails(self, encryption_key: str, video_id: str | int) -> str:
         url = f"https://api.vimeo.com/videos/{video_id}"
-        access_token = await self.get_vimeo_access_token()
+        access_token = await self.get_vimeo_access_token(encryption_key)
         headers = {"Authorization": f"Bearer {access_token}"}
 
         async with httpx.AsyncClient() as session:

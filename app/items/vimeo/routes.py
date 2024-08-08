@@ -22,8 +22,8 @@ async def item_batch_upload(
     payload: ItemVimeo,
     token_data: AccessTokenData = Depends(get_current_user),
 ):
-    controller = ItemVimeoCreateController(token_data, source_id, encryption_key)
-    return await controller.item_create(payload)
+    controller = ItemVimeoCreateController(token_data, source_id)
+    return await controller.item_create(encryption_key, payload)
 
 
 @router.post("/search")
