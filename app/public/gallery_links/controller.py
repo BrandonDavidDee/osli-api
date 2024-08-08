@@ -4,7 +4,7 @@ from app.db import db
 from app.galleries.controllers.gallery_detail import GalleryAssemblyStub
 
 
-class GalleryLinkController:
+class PublicGalleryLinkController:
     def __init__(self, link: str):
         self.db = db
         self.link = link
