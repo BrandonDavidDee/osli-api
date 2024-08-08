@@ -18,8 +18,8 @@ router = APIRouter()
 @router.post("")
 async def item_batch_upload(
     source_id: int,
+    encryption_key: str,
     payload: ItemVimeo,
-    encryption_key: str = "foo",
     token_data: AccessTokenData = Depends(get_current_user),
 ):
     controller = ItemVimeoCreateController(token_data, source_id, encryption_key)

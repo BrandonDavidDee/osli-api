@@ -25,8 +25,10 @@ class VimeoApiController(BaseController):
 
     async def get_vimeo_access_token(self):
         source: Record = await self.get_source_record()
-        # will be hashed value in db
-        return source["access_token"]
+        encrypted_access_token = source["access_token"]
+        return self.encryption.decrypt_access_token(
+            encrypted_access_token, self.encryption_key
+        )
 
     async def get_thumbnails(self, video_id: str | int) -> str:
         url = f"https://api.vimeo.com/videos/{video_id}"

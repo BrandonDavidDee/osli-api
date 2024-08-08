@@ -18,6 +18,7 @@ class KeyEncryptionController:
     def __init__(self):
         self.api_key_salt: str | None = os.getenv("API_KEY_SALT")
         self.api_secret_salt: str | None = os.getenv("API_SECRET_SALT")
+        self.access_token_salt: str | None = os.getenv("ACCESS_TOKEN_SALT")
 
     @staticmethod
     def encode_passphrase(key: str) -> bytes:
@@ -47,19 +48,25 @@ class KeyEncryptionController:
         try:
             return fernet.decrypt(encrypted).decode()
         except InvalidToken:
-            raise HTTPException(status_code=401, detail="Invalid passphrase")
+            raise HTTPException(status_code=403, detail="Invalid passphrase")
 
     def encrypt_api_key(self, api_key: str, passphrase: str) -> str:
         return self.encrypt(api_key, passphrase, self.api_key_salt)
 
-    def encrypt_api_secret(self, api_key: str, passphrase: str) -> str:
-        return self.encrypt(api_key, passphrase, self.api_secret_salt)
+    def encrypt_api_secret(self, api_secret: str, passphrase: str) -> str:
+        return self.encrypt(api_secret, passphrase, self.api_secret_salt)
+
+    def encrypt_access_token(self, access_token: str, passphrase: str) -> str:
+        return self.encrypt(access_token, passphrase, self.access_token_salt)
 
     def decrypt_api_key(self, encrypted_api_key: str, passphrase: str) -> str:
         return self.decrypt(encrypted_api_key, passphrase, self.api_key_salt)
 
-    def decrypt_api_secret(self, encrypted_api_key: str, passphrase: str) -> str:
-        return self.decrypt(encrypted_api_key, passphrase, self.api_secret_salt)
+    def decrypt_api_secret(self, encrypted_api_secret: str, passphrase: str) -> str:
+        return self.decrypt(encrypted_api_secret, passphrase, self.api_secret_salt)
+
+    def decrypt_access_token(self, encrypted_access_token: str, passphrase: str) -> str:
+        return self.decrypt(encrypted_access_token, passphrase, self.access_token_salt)
 
 
 class BaseController:
