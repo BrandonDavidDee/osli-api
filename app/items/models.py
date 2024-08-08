@@ -32,8 +32,8 @@ class ItemLink(BaseModel):
 class ItemBase(BaseModel):
     id: int | None = None
     notes: str | None = None
-    date_created: datetime
-    created_by_id: int
+    date_created: datetime | None = None
+    # created_by_id: int
     tags: list[ItemTag] = []
     links: list[ItemLink] = []
     created_by: User | None = None

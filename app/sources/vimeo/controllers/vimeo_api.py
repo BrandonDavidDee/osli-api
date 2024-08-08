@@ -1,14 +1,52 @@
 import base64
 
 import httpx
+from asyncpg import Record
+from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
-from app.controller import BaseController
+from app.controller import BaseController, KeyEncryptionController
 
 
 class VimeoApiController(BaseController):
-    def __init__(self, token_data: AccessTokenData):
+    def __init__(
+        self, token_data: AccessTokenData, source_id: int, encryption_key: str
+    ):
         super().__init__(token_data)
+        self.source_id = source_id
+        self.encryption_key = encryption_key
+        self.encryption = KeyEncryptionController()
+
+    async def get_source_record(self) -> Record:
+        record = await self.db.select_one(
+            "SELECT * FROM source_vimeo WHERE id = ($1)", self.source_id
+        )
+        return record
+
+    async def get_vimeo_access_token(self):
+        source: Record = await self.get_source_record()
+        # will be hashed value in db
+        return source["access_token"]
+
+    async def get_thumbnails(self, video_id: str | int) -> str:
+        url = f"https://api.vimeo.com/videos/{video_id}"
+        access_token = await self.get_vimeo_access_token()
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        async with httpx.AsyncClient() as session:
+            response = await session.get(url, headers=headers)
+            if response.status_code == 200:
+                video = response.json()
+                thumbnails = video.get("pictures", {}).get("sizes", [])
+                large = thumbnails[4]
+                link = large["link"]
+                # link_with_play_button = large["link_with_play_button"]
+                return link
+            else:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Failed to get thumbs: {response.status_code} - {response.text}",
+                )
 
     @staticmethod
     async def generate_vimeo_access_token():
@@ -37,29 +75,4 @@ class VimeoApiController(BaseController):
                 print(
                     f"Failed to generate access token: {response.status_code} - {response.text}"
                 )
-                return None
-
-    @staticmethod
-    def get_vimeo_access_token():
-        # will be hashed value in db
-        return ""
-
-    async def get_thumbnails(self, video_id: str | int):
-        url = f"https://api.vimeo.com/videos/{video_id}"
-
-        access_token = self.get_vimeo_access_token()
-        headers = {"Authorization": f"Bearer {access_token}"}
-
-        async with httpx.AsyncClient() as session:
-            response = await session.get(url, headers=headers)
-            if response.status_code == 200:
-                video = response.json()
-                thumbnails = video.get("pictures", {}).get("sizes", [])
-                large = thumbnails[4]
-                link = large["link"]
-                link_with_play_button = large["link_with_play_button"]
-                print(link)
-                print(link_with_play_button)
-            else:
-                print(f"Failed to get thumbs: {response.status_code} - {response.text}")
                 return None

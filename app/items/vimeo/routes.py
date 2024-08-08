@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Response, Security
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.items.models import ItemLink, ItemTag, SearchParams
+from app.items.vimeo.controllers.item_create import ItemVimeoCreateController
 from app.items.vimeo.controllers.item_detail import ItemVimeoDetailController
 from app.items.vimeo.controllers.item_links import ItemVimeoLinkController
 from app.items.vimeo.controllers.item_list import ItemVimeoListController
@@ -15,6 +16,17 @@ router = APIRouter()
 
 
 @router.post("")
+async def item_batch_upload(
+    source_id: int,
+    payload: ItemVimeo,
+    encryption_key: str = "foo",
+    token_data: AccessTokenData = Depends(get_current_user),
+):
+    controller = ItemVimeoCreateController(token_data, source_id, encryption_key)
+    return await controller.item_create(payload)
+
+
+@router.post("/search")
 async def item_vimeo_list(
     source_id: int,
     payload: SearchParams,
