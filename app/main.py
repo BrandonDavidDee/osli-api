@@ -1,5 +1,7 @@
+import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +15,8 @@ from app.sources import routes as sources
 from app.tags import routes as tags
 from app.users import routes as users
 
+load_dotenv()
+
 
 @asynccontextmanager
 async def lifespan(fastapi: FastAPI):
@@ -22,12 +26,11 @@ async def lifespan(fastapi: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+origin_url = os.getenv("SITE_URL")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://localhost:9000",
-    ],
+    allow_origins=[origin_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

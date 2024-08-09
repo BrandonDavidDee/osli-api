@@ -1,11 +1,9 @@
 import os
 
 from asyncpg import Record, UniqueViolationError, create_pool
-from dotenv import load_dotenv
 from fastapi import HTTPException, Response
 from sqlalchemy.ext.declarative import declarative_base
 
-load_dotenv()
 Base = declarative_base()
 
 
