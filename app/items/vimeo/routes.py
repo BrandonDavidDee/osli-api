@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Response, Security
+from fastapi import APIRouter, Depends, Response
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -31,7 +29,7 @@ async def item_batch_upload(
 async def item_vimeo_list(
     source_id: int,
     payload: SearchParams,
-    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
+    token_data: AccessTokenData = Depends(get_current_user),
 ):
     controller = ItemVimeoListController(token_data, source_id)
     return await controller.item_search(payload)

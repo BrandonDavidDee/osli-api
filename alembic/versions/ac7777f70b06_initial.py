@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: aa0c25e89bb1
+Revision ID: ac7777f70b06
 Revises: 
-Create Date: 2024-08-02 11:30:16.694243
+Create Date: 2024-08-09 12:11:18.816012
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'aa0c25e89bb1'
+revision = 'ac7777f70b06'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,6 +40,7 @@ def upgrade() -> None:
     op.create_table('gallery',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
+    sa.Column('view_type', sa.String(length=20), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('date_created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('created_by_id', sa.Integer(), nullable=True),
@@ -72,6 +73,24 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_source_vimeo_id'), 'source_vimeo', ['id'], unique=False)
+    op.create_table('gallery_link',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('gallery_id', sa.Integer(), nullable=False),
+    sa.Column('show_title', sa.Boolean(), nullable=True),
+    sa.Column('title', sa.String(), nullable=True),
+    sa.Column('view_type', sa.String(length=20), nullable=True),
+    sa.Column('link', sa.String(), nullable=False),
+    sa.Column('expiration_date', sa.Date(), nullable=True),
+    sa.Column('view_count', sa.Integer(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('date_created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_by_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by_id'], ['auth_user.id'], ),
+    sa.ForeignKeyConstraint(['gallery_id'], ['gallery.id'], name='gallery_link_gallery_id_fkey', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('link')
+    )
+    op.create_index(op.f('ix_gallery_link_id'), 'gallery_link', ['id'], unique=False)
     op.create_table('item_bucket',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('source_bucket_id', sa.Integer(), nullable=False),
@@ -106,13 +125,52 @@ def upgrade() -> None:
     sa.Column('gallery_id', sa.Integer(), nullable=False),
     sa.Column('item_bucket_id', sa.Integer(), nullable=True),
     sa.Column('item_vimeo_id', sa.Integer(), nullable=True),
-    sa.Column('order', sa.Integer(), nullable=False),
+    sa.Column('item_order', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['gallery_id'], ['gallery.id'], name='gallery_item_gallery_id_fkey', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['item_bucket_id'], ['item_bucket.id'], name='gallery_item_item_bucket_id_fkey', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['item_vimeo_id'], ['item_vimeo.id'], name='gallery_item_item_vimeo_id_fkey', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_gallery_item_id'), 'gallery_item', ['id'], unique=False)
+    op.create_table('item_link',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('item_bucket_id', sa.Integer(), nullable=True),
+    sa.Column('item_vimeo_id', sa.Integer(), nullable=True),
+    sa.Column('show_title', sa.Boolean(), nullable=True),
+    sa.Column('title', sa.String(), nullable=True),
+    sa.Column('link', sa.String(), nullable=False),
+    sa.Column('expiration_date', sa.Date(), nullable=True),
+    sa.Column('view_count', sa.Integer(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('date_created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_by_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by_id'], ['auth_user.id'], ),
+    sa.ForeignKeyConstraint(['item_bucket_id'], ['item_bucket.id'], name='item_link_item_bucket_id_fkey', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['item_vimeo_id'], ['item_vimeo.id'], name='item_link_item_vimeo_id_fkey', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('link')
+    )
+    op.create_index(op.f('ix_item_link_id'), 'item_link', ['id'], unique=False)
+    op.create_table('saved_item_bucket',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('item_bucket_id', sa.Integer(), nullable=False),
+    sa.Column('created_by_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['created_by_id'], ['auth_user.id'], ),
+    sa.ForeignKeyConstraint(['item_bucket_id'], ['item_bucket.id'], name='saved_item_bucket_item_bucket_id_fkey', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('item_bucket_id', 'created_by_id', name='uq_saved_item_bucket')
+    )
+    op.create_index(op.f('ix_saved_item_bucket_id'), 'saved_item_bucket', ['id'], unique=False)
+    op.create_table('saved_item_vimeo',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('item_vimeo_id', sa.Integer(), nullable=False),
+    sa.Column('created_by_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['created_by_id'], ['auth_user.id'], ),
+    sa.ForeignKeyConstraint(['item_vimeo_id'], ['item_vimeo.id'], name='saved_item_vimeo_item_vimeo_id_fkey', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('item_vimeo_id', 'created_by_id', name='uq_saved_item_vimeo')
+    )
+    op.create_index(op.f('ix_saved_item_vimeo_id'), 'saved_item_vimeo', ['id'], unique=False)
     op.create_table('tag_item_bucket',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('tag_id', sa.Integer(), nullable=False),
@@ -136,12 +194,20 @@ def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('tag_item_vimeo')
     op.drop_table('tag_item_bucket')
+    op.drop_index(op.f('ix_saved_item_vimeo_id'), table_name='saved_item_vimeo')
+    op.drop_table('saved_item_vimeo')
+    op.drop_index(op.f('ix_saved_item_bucket_id'), table_name='saved_item_bucket')
+    op.drop_table('saved_item_bucket')
+    op.drop_index(op.f('ix_item_link_id'), table_name='item_link')
+    op.drop_table('item_link')
     op.drop_index(op.f('ix_gallery_item_id'), table_name='gallery_item')
     op.drop_table('gallery_item')
     op.drop_index(op.f('ix_item_vimeo_id'), table_name='item_vimeo')
     op.drop_table('item_vimeo')
     op.drop_index(op.f('ix_item_bucket_id'), table_name='item_bucket')
     op.drop_table('item_bucket')
+    op.drop_index(op.f('ix_gallery_link_id'), table_name='gallery_link')
+    op.drop_table('gallery_link')
     op.drop_index(op.f('ix_source_vimeo_id'), table_name='source_vimeo')
     op.drop_table('source_vimeo')
     op.drop_index(op.f('ix_source_bucket_id'), table_name='source_bucket')

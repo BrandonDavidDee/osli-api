@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, Depends, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -12,18 +12,13 @@ router = APIRouter()
 
 
 @router.get("")
-async def source_list(
-    token_data: Annotated[
-        AccessTokenData, Security(get_current_user, scopes=["source_list"])
-    ],
-):
+async def source_list(token_data: AccessTokenData = Depends(get_current_user)):
     return await SourceBucketListController(token_data).get_list()
 
 
 @router.get("/{source_id}")
 async def source_detail(
-    source_id: int,
-    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
+    source_id: int, token_data: AccessTokenData = Depends(get_current_user)
 ):
     controller = SourceBucketDetailController(token_data, source_id)
     return await controller.source_detail()

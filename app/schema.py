@@ -180,6 +180,7 @@ class Gallery(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
+    view_type = Column(String(20))
     description = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"))
@@ -246,7 +247,9 @@ class GalleryLink(Base):
         ),
         nullable=False,
     )
-    title = Column(String, nullable=True)  # optional
+    show_title = Column(Boolean, default=False)
+    title = Column(String, nullable=True)  # optional title override
+    view_type = Column(String(20), nullable=True)  # optional view type override
     link = Column(String, nullable=False, unique=True)
     expiration_date = Column(Date, nullable=True)
     view_count = Column(Integer, default=0)
@@ -300,7 +303,8 @@ class ItemLink(Base):
         ),
         nullable=True,
     )
-    title = Column(String, nullable=True)  # optional
+    show_title = Column(Boolean, default=False)
+    title = Column(String, nullable=True)  # optional title override
     link = Column(String, nullable=False, unique=True)
     expiration_date = Column(Date, nullable=True)
     view_count = Column(Integer, default=0)

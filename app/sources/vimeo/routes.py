@@ -12,11 +12,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def source_list(
-    token_data: Annotated[
-        AccessTokenData, Security(get_current_user, scopes=["source_list"])
-    ],
-):
+async def source_list(token_data: AccessTokenData = Depends(get_current_user)):
     return await SourcesVimeoListController(token_data).get_list()
 
 
@@ -32,7 +28,7 @@ async def source_update(
     source_id: int,
     passphrase: str,
     payload: SourceVimeo,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
 ):
     return await SourceVimeoDetailController(token_data, source_id).source_update(
         passphrase, payload
