@@ -6,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import backref, declarative_base, relationship
@@ -331,6 +332,12 @@ class SavedItemBucket(Base):
     )
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint(
+            "item_bucket_id", "created_by_id", name="uq_saved_item_bucket"
+        ),
+    )
+
 
 class SavedItemVimeo(Base):
     __tablename__ = "saved_item_vimeo"
@@ -346,3 +353,7 @@ class SavedItemVimeo(Base):
         nullable=False,
     )
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("item_vimeo_id", "created_by_id", name="uq_saved_item_vimeo"),
+    )
