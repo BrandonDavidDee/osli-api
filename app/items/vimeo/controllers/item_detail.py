@@ -18,6 +18,7 @@ class ItemVimeoDetailController(BaseController):
     async def item_detail(self):
         query = """SELECT 
         i.*,
+        siv.id as saved_item_id,
         source.title as source_title,
         source.client_identifier,
         source.client_secret,
@@ -27,20 +28,26 @@ class ItemVimeoDetailController(BaseController):
         tag.id as tag_id,
         tag.title as tag_title
         FROM item_vimeo i 
+        LEFT JOIN saved_item_vimeo siv ON siv.item_vimeo_id = i.id AND siv.created_by_id = $1
         LEFT JOIN source_vimeo AS source ON source.id = i.source_vimeo_id
         LEFT JOIN tag_item_vimeo as j ON j.item_vimeo_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
-        WHERE i.id = $1
+        WHERE i.id = $2
         """
-        values: tuple = (self.item_id,)
+        values: tuple = (
+            int(self.token_data.user_id),
+            self.item_id,
+        )
         result: Record = await self.db.select_many(query, *values)
 
         if not result:
             raise HTTPException(status_code=404)
 
         base_row = result[0]
+        is_saved = bool(base_row["saved_item_id"])
 
         item = ItemVimeo(**base_row)
+        item.saved = is_saved
         item.source = SourceVimeo(
             id=base_row["source_vimeo_id"],
             title=base_row["source_title"],

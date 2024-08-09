@@ -31,6 +31,7 @@ class ItemLink(BaseModel):
 
 class ItemBase(BaseModel):
     id: int | None = None
+    saved: bool = False
     notes: str | None = None
     date_created: datetime | None = None
     # created_by_id: int

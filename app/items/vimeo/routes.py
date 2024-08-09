@@ -9,6 +9,7 @@ from app.items.vimeo.controllers.item_create import ItemVimeoCreateController
 from app.items.vimeo.controllers.item_detail import ItemVimeoDetailController
 from app.items.vimeo.controllers.item_links import ItemVimeoLinkController
 from app.items.vimeo.controllers.item_list import ItemVimeoListController
+from app.items.vimeo.controllers.item_save import ItemVimeoSaveController
 from app.items.vimeo.controllers.item_tags import ItemVimeoTagsController
 from app.items.vimeo.models import ItemVimeo
 
@@ -109,3 +110,17 @@ async def item_link_delete(
 ):
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.item_link_delete(item_link_id)
+
+
+@router.post("/{item_id}/save")
+async def save_item(
+    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+):
+    return await ItemVimeoSaveController(token_data, item_id).save_item()
+
+
+@router.delete("/{item_id}/save")
+async def delete_saved_item(
+    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+):
+    return await ItemVimeoSaveController(token_data, item_id).delete_saved_item()
