@@ -4,6 +4,7 @@ from app.sources.bucket.models import SourceBucket
 
 class ItemBucket(ItemBase):
     title: str | None = None
+    saved: bool = False
     mime_type: str | None = None
     file_path: str
     file_name: str | None = None

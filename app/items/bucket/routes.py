@@ -7,6 +7,7 @@ from app.authentication.token import get_current_user
 from app.items.bucket.controllers.item_detail import ItemBucketDetailController
 from app.items.bucket.controllers.item_links import ItemBucketLinkController
 from app.items.bucket.controllers.item_list import ItemBucketListController
+from app.items.bucket.controllers.item_save import ItemBucketSaveController
 from app.items.bucket.controllers.item_tags import ItemBucketTagController
 from app.items.bucket.controllers.item_upload import BatchUploadController
 from app.items.bucket.models import ItemBucket
@@ -109,3 +110,17 @@ async def item_link_delete(
 ):
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.item_link_delete(item_link_id)
+
+
+@router.post("/{item_id}/save")
+async def save_item(
+    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+):
+    return await ItemBucketSaveController(token_data, item_id).save_item()
+
+
+@router.delete("/{item_id}/save")
+async def delete_saved_item(
+    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+):
+    return await ItemBucketSaveController(token_data, item_id).delete_saved_item()

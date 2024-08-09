@@ -18,6 +18,7 @@ class ItemBucketDetailController(BaseController):
     async def item_detail(self):
         query = """SELECT 
         i.*,
+        sib.id as saved_item_id,
         source.title as source_title,
         source.bucket_name,
         source.media_prefix,
@@ -26,20 +27,26 @@ class ItemBucketDetailController(BaseController):
         tag.id as tag_id,
         tag.title as tag_title
         FROM item_bucket i 
+        LEFT JOIN saved_item_bucket sib ON sib.item_bucket_id = i.id AND sib.created_by_id = $1
         LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
         LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
-        WHERE i.id = $1
+        WHERE i.id = $2
         """
-        values: tuple = (self.item_id,)
+        values: tuple = (
+            int(self.token_data.user_id),
+            self.item_id,
+        )
         result: Record = await self.db.select_many(query, *values)
 
         if not result:
             raise HTTPException(status_code=404)
 
         base_row = result[0]
+        is_saved = bool(base_row["saved_item_id"])
 
         item = ItemBucket(**base_row)
+        item.saved = is_saved
         item.source = SourceBucket(
             id=base_row["source_bucket_id"],
             title=base_row["source_title"],
