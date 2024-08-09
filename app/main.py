@@ -10,6 +10,7 @@ from app.authentication.token import get_current_user
 from app.db import db
 from app.galleries import routes as galleries
 from app.items import routes as items
+from app.me import routes as me
 from app.public import routes as public
 from app.sources import routes as sources
 from app.tags import routes as tags
@@ -45,6 +46,11 @@ def app_root():
 app.include_router(
     auth.router,
     prefix="/api/authentication",
+)
+
+app.include_router(
+    me.router,
+    prefix="/api/me",
 )
 
 app.include_router(
