@@ -258,6 +258,26 @@ class GalleryLink(Base):
 
 
 class ItemLink(Base):
+    """
+    I did not split item link tables out between source types like everything else because I want to
+    limit public shares to either being accessed via:
+
+      - '/site-url/share/GALLERY/{link}'
+      - '/site-url/share/ITEM/{link}'
+
+    If I had tables such as 'item_bucket_link' and 'item_vimeo_link' then the most reasonable url pattern
+    in both the client and the api would be:
+
+      - '/site-url/share/BUCKET/{link}'
+      - '/site-url/share/VIMEO/{link}'
+
+    I feel this is too transparent and verbose. It would also mean the app would need to query '{link}'
+    on multiple tables instead of expecting it to be on just this one.
+
+    Using 1 item link with nullable fk / id columns for all item types allows me to avoid that conflict &
+    permanently limit the share / public url scheme to being of either GALLERY or ITEM.
+    """
+
     __tablename__ = "item_link"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -294,3 +314,35 @@ class ItemLink(Base):
     item_vimeo = relationship(
         "ItemVimeo", backref=backref("links", cascade="all, delete-orphan")
     )
+
+
+class SavedItemBucket(Base):
+    __tablename__ = "saved_item_bucket"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_bucket_id = Column(
+        Integer,
+        ForeignKey(
+            "item_bucket.id",
+            name="saved_item_bucket_item_bucket_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
+
+
+class SavedItemVimeo(Base):
+    __tablename__ = "saved_item_vimeo"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_vimeo_id = Column(
+        Integer,
+        ForeignKey(
+            "item_vimeo.id",
+            name="saved_item_vimeo_item_vimeo_id_fkey",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
