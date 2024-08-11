@@ -26,6 +26,7 @@ class AuthUser(Base):
     is_admin = Column(Boolean, default=False)
     scopes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
 
     # Relationships
     created_buckets = relationship("SourceBucket", back_populates="creator")
@@ -42,6 +43,7 @@ class SourceBucket(Base):
     secret_access_key = Column(String, nullable=False)
     media_prefix = Column(String)
     grid_view = Column(Boolean, default=False)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
 
     # Relationships
@@ -58,6 +60,7 @@ class SourceVimeo(Base):
     client_secret = Column(String, nullable=False)
     access_token = Column(String, nullable=False)
     grid_view = Column(Boolean, default=False)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
 
     # Relationships
@@ -121,6 +124,8 @@ class Tag(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(50), unique=True, index=True, nullable=False)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
 
 
 class TagItemBucket(Base):
@@ -223,6 +228,8 @@ class GalleryItem(Base):
         nullable=True,
     )
     item_order = Column(Integer, nullable=False)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("auth_user.id"))
 
     # Relationships
     gallery = relationship("Gallery", back_populates="items")
@@ -334,6 +341,7 @@ class SavedItemBucket(Base):
         ),
         nullable=False,
     )
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
 
     __table_args__ = (
@@ -356,6 +364,7 @@ class SavedItemVimeo(Base):
         ),
         nullable=False,
     )
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"), nullable=False)
 
     __table_args__ = (

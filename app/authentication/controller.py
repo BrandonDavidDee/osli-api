@@ -22,7 +22,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class AuthControllerBase:
     def __init__(self, request: Request):
         self.db = db
-        self.now = datetime.now(timezone.utc)
         self.request = request
 
     async def get_user_in_db(

@@ -10,15 +10,14 @@ class ItemVimeoCreateController(VimeoApiController):
     async def item_create(self, encryption_key: str, payload: ItemVimeo):
         thumbnail = await self.get_thumbnails(encryption_key, payload.video_id)
         query = """INSERT INTO item_vimeo
-        (source_vimeo_id, video_id, title, thumbnail, notes, date_created, created_by_id)
-        values ($1, $2, $3, $4, $5, $6, $7) RETURNING *"""
+        (source_vimeo_id, video_id, title, thumbnail, notes, created_by_id)
+        values ($1, $2, $3, $4, $5, $6) RETURNING *"""
         values: tuple = (
             self.source_id,
             payload.video_id,
             payload.title,
             thumbnail,
             payload.notes,
-            self.now,
             int(self.token_data.user_id),
         )
         return await self.db.insert(query, *values)

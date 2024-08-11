@@ -23,15 +23,14 @@ class GalleryLinkController(BaseController):
         new_link = self.generate_link()
         print(new_link)
         query = """INSERT INTO gallery_link
-        (gallery_id, title, link, expiration_date, date_created, created_by_id)
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
+        (gallery_id, title, link, expiration_date, created_by_id)
+        VALUES ($1, $2, $3, $4, $5) RETURNING *
         """
         values: tuple = (
             self.gallery_id,
             payload.title,
             new_link,
             payload.expiration_date,
-            self.now,
             int(self.token_data.user_id),
         )
         await self.db.insert(query, *values)

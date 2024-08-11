@@ -31,14 +31,13 @@ class BatchUploadController(S3ApiController):
                 content_type = "application/octet-stream"
 
             query = """INSERT INTO item_bucket
-            (source_bucket_id, mime_type, file_path, file_size, date_created, created_by_id)
-            values ($1, $2, $3, $4, $5, $6) RETURNING *"""
+            (source_bucket_id, mime_type, file_path, file_size, created_by_id)
+            values ($1, $2, $3, $4, $5) RETURNING *"""
             values: tuple = (
                 self.source_id,
                 content_type,
                 key,
                 file_size,
-                self.now,
                 int(self.token_data.user_id),
             )
             output.append(key)

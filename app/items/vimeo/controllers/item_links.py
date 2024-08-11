@@ -14,15 +14,14 @@ class ItemVimeoLinkController(ItemLinkController):
     async def item_link_create(self, payload: ItemLink):
         new_link = self.generate_link()
         query = """INSERT INTO item_link
-        (item_vimeo_id, title, link, expiration_date, date_created, created_by_id, is_active)
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *
+        (item_vimeo_id, title, link, expiration_date, created_by_id, is_active)
+        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
         """
         values: tuple = (
             self.item_id,
             payload.title,
             new_link,
             payload.expiration_date,
-            self.now,
             int(self.token_data.user_id),
             payload.is_active,
         )

@@ -45,9 +45,8 @@ class S3ApiController(BaseController):
                     mime_type, 
                     file_path, 
                     file_size, 
-                    date_created, 
                     created_by_id)
-                    VALUES ($1, $2, $3, $4, $5, $6) 
+                    VALUES ($1, $2, $3, $4, $5) 
                     RETURNING *"""
                     for obj in objects:
                         values: tuple = (
@@ -55,7 +54,6 @@ class S3ApiController(BaseController):
                             obj["mime_type"],
                             obj["key"],
                             obj["size"],
-                            self.now,
                             self.token_data.user_id,
                         )
                         result = await connection.fetchrow(query, *values)
