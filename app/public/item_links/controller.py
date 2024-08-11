@@ -1,7 +1,7 @@
 import os
 
 from asyncpg import Record
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.db import db
 from app.items.bucket.models import ItemBucket
@@ -20,8 +20,19 @@ class PublicItemLinkController:
     def get_filename(path) -> str:
         return os.path.basename(path)
 
-    async def get_item_link(self):
+    async def update_view_count(self, view_count: int, item_link_id: int):
+        query = "UPDATE item_link SET view_count = $1 WHERE id = $2 RETURNING *"
+        updated_view_count = view_count + 1
+        values: tuple = (
+            updated_view_count,
+            item_link_id,
+        )
+        await self.db.insert(query, *values)
+
+    async def get_item_link(self, bg_tasks: BackgroundTasks):
         query = """SELECT 
+        il.id as item_link_id,
+        il.view_count,
         il.title as public_link_title,
         il.is_active,
         il.expiration_date,
@@ -61,6 +72,7 @@ class PublicItemLinkController:
             raise HTTPException(status_code=404, detail="Link not active")
 
         use_link_title = bool(base_row["public_link_title"])
+        view_count = base_row["view_count"] or 0
         title: str | None = None
 
         if use_link_title:
@@ -81,7 +93,6 @@ class PublicItemLinkController:
                     file_path=row["bucket_file_path"],
                     file_size=row["bucket_file_size"],
                     date_created=row["bucket_date_created"],
-                    created_by_id=row["bucket_created_by_id"],
                 )
                 item_bucket.file_name = self.get_filename(row["bucket_file_path"])
                 if row["source_bucket_id"]:
@@ -103,9 +114,9 @@ class PublicItemLinkController:
                     thumbnail=row["item_vimeo_thumbnail"],
                     video_id=row["item_vimeo_video_id"],
                     date_created=row["item_vimeo_date_created"],
-                    created_by_id=row["item_vimeo_created_by_id"],
                 )
                 item_link.source_type = SourceType.VIMEO
                 item_link.item_vimeo = item_vimeo
 
+        bg_tasks.add_task(self.update_view_count, view_count, base_row["item_link_id"])
         return item_link

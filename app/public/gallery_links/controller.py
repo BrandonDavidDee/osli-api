@@ -1,4 +1,5 @@
-from fastapi import HTTPException
+from asyncpg import Record
+from fastapi import BackgroundTasks, HTTPException
 
 from app.db import db
 from app.galleries.controllers.gallery_detail import GalleryAssemblyStub
@@ -10,8 +11,19 @@ class PublicGalleryLinkController:
         self.link = link
         self.assembly_stub = GalleryAssemblyStub()
 
-    async def get_gallery_link(self):
+    async def update_view_count(self, view_count: int, gallery_link_id: int):
+        query = "UPDATE gallery_link SET view_count = $1 WHERE id = $2 RETURNING *"
+        updated_view_count = view_count + 1
+        values: tuple = (
+            updated_view_count,
+            gallery_link_id,
+        )
+        await self.db.insert(query, *values)
+
+    async def get_gallery_link(self, bg_tasks: BackgroundTasks):
         query = """SELECT 
+        gl.id as gallery_link_id,
+        gl.view_count,
         gl.title as public_link_title,
         gl.is_active,
 
@@ -54,8 +66,13 @@ class PublicGalleryLinkController:
         result = await self.db.select_many(query, self.link)
         if not result:
             raise HTTPException(status_code=404, detail="Link not found")
-        is_active = bool(result[0]["is_active"])
+        base_row: Record = result[0]
+        is_active = bool(base_row["is_active"])
         if not is_active:
             raise HTTPException(status_code=404, detail="Link not active")
-        use_link_title = bool(result[0]["public_link_title"])
+        use_link_title = bool(base_row["public_link_title"])
+        view_count = base_row["view_count"] or 0
+        bg_tasks.add_task(
+            self.update_view_count, view_count, base_row["gallery_link_id"]
+        )
         return self.assembly_stub.assemble_gallery(result, use_link_title)

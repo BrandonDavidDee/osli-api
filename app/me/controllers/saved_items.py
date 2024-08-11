@@ -65,7 +65,7 @@ class SavedItemsController(BaseController):
                 )
             item_bucket.file_name = self.get_filename(row["file_path"])
             saved_item = SavedItem(
-                source_type=SourceType.VIMEO,
+                source_type=SourceType.BUCKET,
                 item_bucket=item_bucket,
                 date_saved=row["date_saved"],
             )
@@ -80,7 +80,7 @@ class SavedItemsController(BaseController):
                 client_secret=row["client_secret"],
                 access_token=row["access_token"],
                 grid_view=row["grid_view"],
-                source_type=SourceType.BUCKET,
+                source_type=SourceType.VIMEO,
             )
             saved_item = SavedItem(
                 source_type=SourceType.VIMEO,
