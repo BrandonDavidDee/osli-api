@@ -8,8 +8,8 @@ from app.me.controllers.saved_items import SavedItemsController
 router = APIRouter()
 
 
-@router.get("/saved")
-async def saved(token_data: AccessTokenData = Depends(get_current_user)):
+@router.get("/saved-items")
+async def saved_items(token_data: AccessTokenData = Depends(get_current_user)):
     return await SavedItemsController(token_data).get_saved_items()
 
 
