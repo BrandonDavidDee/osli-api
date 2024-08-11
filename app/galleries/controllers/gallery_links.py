@@ -21,7 +21,6 @@ class GalleryLinkController(BaseController):
 
     async def gallery_link_create(self, payload: GalleryLink):
         new_link = self.generate_link()
-        print(new_link)
         query = """INSERT INTO gallery_link
         (gallery_id, title, link, expiration_date, created_by_id)
         VALUES ($1, $2, $3, $4, $5) RETURNING *
@@ -38,6 +37,11 @@ class GalleryLinkController(BaseController):
     async def get_gallery_links(self):
         query = """SELECT 
         g.*,
+        
+        u.id as user_id,
+        u.username,
+        u.is_active as user_is_active,
+        
         gl.id as link_id,
         gl.title as link_title,
         gl.link as link_link,
@@ -45,12 +49,15 @@ class GalleryLinkController(BaseController):
         gl.view_count as link_view_count,
         gl.date_created as link_date_created,
         gl.is_active as link_is_active,
-        u.id as user_id,
-        u.username,
-        u.is_active as user_is_active
+        
+        lu.id as link_user_id,
+        lu.username as link_username,
+        lu.is_active as link_user_is_active
+        
         FROM gallery AS g 
+        LEFT JOIN auth_user AS u ON u.id = g.created_by_id
         LEFT JOIN gallery_link AS gl ON gl.gallery_id = g.id
-        LEFT JOIN auth_user AS u ON u.id = gl.created_by_id
+        LEFT JOIN auth_user AS lu ON lu.id = gl.created_by_id
         WHERE g.id = $1"""
         result: list[Record] = await self.db.select_many(query, self.gallery_id)
         if not result:
@@ -71,21 +78,22 @@ class GalleryLinkController(BaseController):
         for row in result:
             view_count = row["link_view_count"] if row["link_view_count"] else 0
             link = self.make_public_url(row["link_link"])
-            gallery_link = GalleryLink(
-                id=row["link_id"],
-                title=row["link_title"],
-                link=link,
-                expiration_date=row["link_expiration_date"],
-                view_count=view_count,
-                is_active=bool(row["link_is_active"]),
-                date_created=row["link_date_created"],
-                created_by=User(
-                    id=row["user_id"],
-                    username=row["username"],
-                    is_active=row["user_is_active"],
-                ),
-            )
-            links.append(gallery_link)
+            if row["link_id"]:
+                gallery_link = GalleryLink(
+                    id=row["link_id"],
+                    title=row["link_title"],
+                    link=link,
+                    expiration_date=row["link_expiration_date"],
+                    view_count=view_count,
+                    is_active=bool(row["link_is_active"]),
+                    date_created=row["link_date_created"],
+                    created_by=User(
+                        id=row["link_user_id"],
+                        username=row["link_username"],
+                        is_active=row["link_user_is_active"],
+                    ),
+                )
+                links.append(gallery_link)
         links.sort(key=lambda x: x.date_created, reverse=True)
         gallery.links = links
 

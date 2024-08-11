@@ -54,7 +54,6 @@ class GalleryAssemblyStub:
                         file_path=row["bucket_file_path"],
                         file_size=row["bucket_file_size"],
                         date_created=row["bucket_date_created"],
-                        created_by_id=row["bucket_created_by_id"],
                     )
                     item_bucket.file_name = self.get_filename(row["bucket_file_path"])
                     if row["source_bucket_id"]:
@@ -73,7 +72,6 @@ class GalleryAssemblyStub:
                         thumbnail=row["item_vimeo_thumbnail"],
                         video_id=row["item_vimeo_video_id"],
                         date_created=row["item_vimeo_date_created"],
-                        created_by_id=row["item_vimeo_created_by_id"],
                     )
                     gallery_item.source_type = SourceType.VIMEO
                     gallery_item.item_vimeo = item_vimeo
