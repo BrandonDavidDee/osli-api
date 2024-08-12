@@ -89,6 +89,33 @@ class GalleryDetailController(BaseController):
         self.gallery_id = gallery_id
         self.assembly_stub = GalleryAssemblyStub()
 
+    @staticmethod
+    async def update_item_order(connection, items: list[GalleryItem]):
+        for item in items:
+            query = "UPDATE gallery_item SET item_order = $1 WHERE id = $2"
+            values: tuple = (
+                item.item_order,
+                item.id,
+            )
+            await connection.fetchrow(query, *values)
+
+    async def gallery_update(self, gallery_id: int, payload: Gallery):
+        async with self.db.get_connection() as connection:
+            try:
+                query = "UPDATE gallery SET title = $1, description = $2 WHERE id = $3"
+                values: tuple = (
+                    payload.title,
+                    payload.description,
+                    gallery_id,
+                )
+                await connection.fetchrow(query, *values)
+                await self.update_item_order(connection, payload.items)
+                return payload
+            except HTTPException as exc:
+                raise exc
+            except Exception as exc:
+                raise HTTPException(status_code=500, detail=str(exc))
+
     async def get_gallery_detail(self) -> Gallery:
         query = """SELECT 
         g.*,

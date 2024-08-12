@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from asyncpg import Record, UniqueViolationError, create_pool
 from fastapi import HTTPException, Response
@@ -69,6 +70,20 @@ class Database:
                 try:
                     await connection.execute(query, *values)
                     return Response()
+                except Exception as exc:
+                    raise HTTPException(status_code=500, detail=str(exc))
+
+    @asynccontextmanager
+    async def get_connection(self, unique_err_message: str | None = None):
+        async with self.pool.acquire() as connection:
+            async with connection.transaction():
+                try:
+                    yield connection
+                except UniqueViolationError as exc:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=unique_err_message or f"Unique Violation Error: {exc}",
+                    )
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
