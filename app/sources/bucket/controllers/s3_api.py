@@ -35,6 +35,23 @@ class S3ApiController(BaseController):
         )
         return source["bucket_name"]
 
+    async def s3_object_delete(self, encryption_key: str, key: str):
+        bucket_name: str = await self.initialize_s3_client(encryption_key)
+        """
+        delete_object always returns a 204 whether the object exists or not
+        anything other than this should be regarded as a client error
+        """
+        response = self.s3_client.delete_object(Bucket=bucket_name, Key=key)
+        try:
+            meta = response["ResponseMetadata"]
+            status = meta["HTTPStatusCode"]
+            if status == 204:
+                return {"result": "Deleted Successfully"}
+            else:
+                return HTTPException(status_code=500, detail="S3 Client Error")
+        except KeyError:
+            return HTTPException(status_code=500, detail="S3 Client Error")
+
     async def post_group(self, objects: list[dict]):
         output: list[dict] = []
         async with self.db.pool.acquire() as connection:
@@ -81,16 +98,3 @@ class S3ApiController(BaseController):
                     }
                     output.append(obj_dict)
         return await self.post_group(output)
-
-    async def temporary_show_keys(self):
-        source: Record = await self.get_source_record()
-        decrypted_access_key_id = self.encryption.decrypt_api_key(
-            source["access_key_id"], self.encryption_key
-        )
-        decrypted_secret = self.encryption.decrypt_api_secret(
-            source["secret_access_key"], self.encryption_key
-        )
-        return {
-            "access_key_id": decrypted_access_key_id,
-            "secret_access_key": decrypted_secret,
-        }

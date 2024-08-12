@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, File, Response, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
+from app.items.bucket.controllers.item_delete import ItemBucketDeleteController
 from app.items.bucket.controllers.item_detail import ItemBucketDetailController
 from app.items.bucket.controllers.item_links import ItemBucketLinkController
 from app.items.bucket.controllers.item_list import ItemBucketListController
@@ -49,6 +50,20 @@ async def item_update(
     token_data: AccessTokenData = Depends(get_current_user),
 ):
     return await ItemBucketDetailController(token_data, item_id).item_update(payload)
+
+
+@router.put("/{item_id}/delete")
+async def item_delete(
+    item_id: int,
+    source_id: int,
+    encryption_key: str,
+    payload: ItemBucket,
+    token_data: AccessTokenData = Depends(get_current_user),
+):
+    controller = ItemBucketDeleteController(token_data=token_data, source_id=source_id)
+    return await controller.delete_item(
+        encryption_key=encryption_key, item_id=item_id, payload=payload
+    )
 
 
 @router.post("/{item_id}/tags")
