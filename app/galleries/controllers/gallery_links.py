@@ -22,13 +22,14 @@ class GalleryLinkController(BaseController):
     async def gallery_link_create(self, payload: GalleryLink):
         new_link = self.generate_link()
         query = """INSERT INTO gallery_link
-        (gallery_id, title, link, expiration_date, created_by_id)
-        VALUES ($1, $2, $3, $4, $5) RETURNING *
+        (gallery_id, title, link, is_active, expiration_date, created_by_id)
+        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
         """
         values: tuple = (
             self.gallery_id,
             payload.title,
             new_link,
+            payload.is_active,
             payload.expiration_date,
             int(self.token_data.user_id),
         )
@@ -111,4 +112,6 @@ class GalleryLinkController(BaseController):
         return payload
 
     async def gallery_link_delete(self, gallery_link_id: int):
-        pass
+        query = "DELETE FROM gallery_link WHERE id = $1"
+        values: tuple = (gallery_link_id,)
+        return await self.db.delete_one(query, *values)

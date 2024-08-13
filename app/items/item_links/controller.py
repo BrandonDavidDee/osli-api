@@ -59,4 +59,6 @@ class ItemLinkController(BaseController):
         return payload
 
     async def item_link_delete(self, item_link_id: int):
-        pass
+        query = "DELETE FROM item_link WHERE id = $1 RETURNING *"
+        values: tuple = (item_link_id,)
+        return await self.db.delete_one(query, *values)
