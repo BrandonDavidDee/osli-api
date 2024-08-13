@@ -35,6 +35,7 @@ class PublicGalleryLinkController:
 
         gi.id as gallery_item_id,
         gi.item_order,
+        gi.date_created as item_date_created,
 
         ib.id as item_bucket_id,
         ib.title as bucket_title,
@@ -49,6 +50,7 @@ class PublicGalleryLinkController:
         sb.media_prefix as source_bucket_media_prefix,
 
         iv.id as item_vimeo_id,
+        iv.source_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
         iv.video_id as item_vimeo_video_id,

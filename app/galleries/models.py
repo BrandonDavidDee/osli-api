@@ -12,9 +12,11 @@ from app.users.models import User
 class GalleryItem(BaseModel):
     id: int
     item_order: int = 0
+    source_id: int | None = None
     source_type: SourceType | None = None
     item_bucket: Optional[ItemBucket] = None
     item_vimeo: Optional[ItemVimeo] = None
+    date_created: datetime | None = None
 
 
 class GalleryItemCreate(BaseModel):

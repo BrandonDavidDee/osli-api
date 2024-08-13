@@ -46,6 +46,7 @@ class GalleryAssemblyStub:
                 gallery_item = GalleryItem(
                     id=row["gallery_item_id"],
                     item_order=row["item_order"],
+                    date_created=row["item_date_created"],
                 )
                 if row["item_bucket_id"]:
                     item_bucket = ItemBucket(
@@ -63,6 +64,7 @@ class GalleryAssemblyStub:
                             media_prefix=row["source_bucket_media_prefix"],
                             source_type=SourceType.BUCKET,
                         )
+                    gallery_item.source_id = row["source_bucket_id"]
                     gallery_item.source_type = SourceType.BUCKET
                     gallery_item.item_bucket = item_bucket
                 if row["item_vimeo_id"]:
@@ -73,6 +75,7 @@ class GalleryAssemblyStub:
                         video_id=row["item_vimeo_video_id"],
                         date_created=row["item_vimeo_date_created"],
                     )
+                    gallery_item.source_id = row["source_vimeo_id"]
                     gallery_item.source_type = SourceType.VIMEO
                     gallery_item.item_vimeo = item_vimeo
                     seen_items[gallery_item_id] = gallery_item
@@ -126,6 +129,7 @@ class GalleryDetailController(BaseController):
         
         gi.id as gallery_item_id,
         gi.item_order,
+        gi.date_created as item_date_created,
 
         ib.id as item_bucket_id,
         ib.title as bucket_title,
@@ -140,6 +144,7 @@ class GalleryDetailController(BaseController):
         sb.media_prefix as source_bucket_media_prefix,
 
         iv.id as item_vimeo_id,
+        iv.source_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
         iv.video_id as item_vimeo_video_id,
