@@ -11,8 +11,11 @@ router = APIRouter()
 
 
 @router.post("")
-async def gallery_create(payload: Gallery):
-    return payload
+async def gallery_create(
+    payload: Gallery, token_data: AccessTokenData = Depends(get_current_user)
+):
+    controller = GalleryListController(token_data)
+    return await controller.gallery_create(payload)
 
 
 @router.get("")
