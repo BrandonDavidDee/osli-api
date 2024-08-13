@@ -66,6 +66,13 @@ async def item_delete(
     )
 
 
+@router.get("/{item_id}/related")
+async def get_related(
+    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+):
+    return await ItemBucketDetailController(token_data, item_id).get_related()
+
+
 @router.post("/{item_id}/tags")
 async def item_tag_create(
     item_id: int,

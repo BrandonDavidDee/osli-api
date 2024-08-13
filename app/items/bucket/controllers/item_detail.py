@@ -3,6 +3,7 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
+from app.galleries.models import Gallery
 from app.items.bucket.models import ItemBucket
 from app.items.models import ItemTag
 from app.sources.bucket.models import SourceBucket
@@ -77,3 +78,50 @@ class ItemBucketDetailController(BaseController):
         )
         await self.db.insert(query, *values)
         return payload
+
+    async def get_related_gallery_items(self):
+        query = """SELECT g.*
+        FROM gallery_item gi
+        LEFT JOIN gallery g ON g.id = gi.gallery_id 
+        WHERE gi.item_bucket_id = $1
+        ORDER BY g.date_created DESC
+        """
+        values: tuple = (self.item_id,)
+        results: list[Record] = await self.db.select_many(query, *values)
+        output: list[Gallery] = []
+        seen_galleries = {}
+        for row in results:
+            gallery_id = row["id"]
+            if gallery_id not in seen_galleries:
+                gallery = Gallery(
+                    id=gallery_id,
+                    title=row["title"],
+                    date_created=row["date_created"],
+                )
+                seen_galleries[gallery_id] = gallery
+                output.append(gallery)
+        return output
+
+    async def get_related_saved_items(self) -> list[str]:
+        query = """SELECT u.username 
+        FROM saved_item_bucket sib
+        LEFT JOIN auth_user u ON u.id = sib.created_by_id
+        WHERE sib.item_bucket_id = $1"""
+        values: tuple = (self.item_id,)
+        results: list[Record] = await self.db.select_many(query, *values)
+        output: list[str] = []
+        for row in results:
+            username = row["username"]
+            if username not in output:
+                output.append(username)
+        return output
+
+    async def get_related(self):
+        galleries = await self.get_related_gallery_items()
+        saved_users = await self.get_related_saved_items()
+        has_related: bool = bool(len(galleries)) or bool(len(saved_users))
+        return {
+            "has_related": has_related,
+            "galleries": galleries,
+            "saved_users": saved_users,
+        }
