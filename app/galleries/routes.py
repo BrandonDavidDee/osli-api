@@ -5,7 +5,7 @@ from app.authentication.token import get_current_user
 from app.galleries.controllers.gallery_detail import GalleryDetailController
 from app.galleries.controllers.gallery_links import GalleryLinkController
 from app.galleries.controllers.gallery_list import GalleryListController
-from app.galleries.models import Gallery, GalleryLink
+from app.galleries.models import Gallery, GalleryItemCreate, GalleryLink
 
 router = APIRouter()
 
@@ -37,6 +37,16 @@ async def gallery_update(
 ):
     controller = GalleryDetailController(token_data, gallery_id)
     return await controller.gallery_update(gallery_id, payload)
+
+
+@router.post("/{gallery_id}/items")
+async def gallery_item_create(
+    gallery_id: int,
+    payload: GalleryItemCreate,
+    token_data: AccessTokenData = Depends(get_current_user),
+):
+    controller = GalleryDetailController(token_data, gallery_id)
+    return await controller.gallery_item_create(payload)
 
 
 @router.post("/{gallery_id}/links")

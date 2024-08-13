@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.galleries.models import Gallery, GalleryItem
+from app.galleries.models import Gallery, GalleryItem, GalleryItemCreate
 from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
 from app.sources.bucket.models import SourceBucket
@@ -159,3 +159,36 @@ class GalleryDetailController(BaseController):
         if not result:
             raise HTTPException(status_code=404)
         return self.assembly_stub.assemble_gallery(result=result)
+
+    async def gallery_item_create(self, payload: GalleryItemCreate):
+        query = """INSERT INTO gallery_item
+        (gallery_id, 
+        item_bucket_id, 
+        item_vimeo_id, 
+        item_order, 
+        created_by_id)
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING *"""
+        created_by_id = int(self.token_data.user_id)
+
+        if payload.source_type == SourceType.BUCKET:
+            values: tuple = (
+                self.gallery_id,
+                payload.item_id,
+                None,
+                payload.item_order,
+                created_by_id,
+            )
+        elif payload.source_type == SourceType.VIMEO:
+            values: tuple = (
+                self.gallery_id,
+                None,
+                payload.item_id,
+                payload.item_order,
+                created_by_id,
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Unknown Source Type")
+        result: Record = await self.db.insert(query, *values)
+        print(result)
+        return result["id"]
