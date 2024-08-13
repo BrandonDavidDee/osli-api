@@ -190,5 +190,8 @@ class GalleryDetailController(BaseController):
         else:
             raise HTTPException(status_code=500, detail="Unknown Source Type")
         result: Record = await self.db.insert(query, *values)
-        print(result)
         return result["id"]
+
+    async def gallery_item_delete(self, gallery_item_id: int):
+        query = "DELETE FROM gallery_item WHERE id = $1"
+        return await self.db.delete_one(query, gallery_item_id)

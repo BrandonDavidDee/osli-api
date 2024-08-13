@@ -49,6 +49,16 @@ async def gallery_item_create(
     return await controller.gallery_item_create(payload)
 
 
+@router.delete("/{gallery_id}/items/{gallery_item_id}")
+async def gallery_item_delete(
+    gallery_id: int,
+    gallery_item_id: int,
+    token_data: AccessTokenData = Depends(get_current_user),
+):
+    controller = GalleryDetailController(token_data, gallery_id)
+    return await controller.gallery_item_delete(gallery_item_id)
+
+
 @router.post("/{gallery_id}/links")
 async def gallery_link_create(
     gallery_id: int,
