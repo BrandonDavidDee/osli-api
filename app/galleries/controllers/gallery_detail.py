@@ -73,6 +73,8 @@ class GalleryAssemblyStub:
                         title=row["item_vimeo_title"],
                         thumbnail=row["item_vimeo_thumbnail"],
                         video_id=row["item_vimeo_video_id"],
+                        height=row["item_vimeo_height"],
+                        width=row["item_vimeo_width"],
                         date_created=row["item_vimeo_date_created"],
                     )
                     gallery_item.source_id = row["source_vimeo_id"]
@@ -145,6 +147,8 @@ class GalleryDetailController(BaseController):
 
         iv.id as item_vimeo_id,
         iv.source_vimeo_id,
+        iv.width as item_vimeo_width,
+        iv.height as item_vimeo_height,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
         iv.video_id as item_vimeo_video_id,

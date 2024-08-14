@@ -53,6 +53,8 @@ class PublicGalleryLinkController:
         iv.source_vimeo_id,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
+        iv.width as item_vimeo_width,
+        iv.height as item_vimeo_height,
         iv.video_id as item_vimeo_video_id,
         iv.date_created as item_vimeo_date_created,
         iv.created_by_id as item_vimeo_created_by_id

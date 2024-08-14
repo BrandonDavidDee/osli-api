@@ -27,7 +27,7 @@ class VimeoApiController(BaseController):
             encrypted_access_token, encryption_key
         )
 
-    async def get_thumbnails(self, encryption_key: str, video_id: str | int) -> str:
+    async def get_thumbnails(self, encryption_key: str, video_id: str | int) -> dict:
         url = f"https://api.vimeo.com/videos/{video_id}"
         access_token = await self.get_vimeo_access_token(encryption_key)
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -35,12 +35,18 @@ class VimeoApiController(BaseController):
         async with httpx.AsyncClient() as session:
             response = await session.get(url, headers=headers)
             if response.status_code == 200:
-                video = response.json()
-                thumbnails = video.get("pictures", {}).get("sizes", [])
+                video_data = response.json()
+                thumbnails = video_data.get("pictures", {}).get("sizes", [])
                 large = thumbnails[4]
-                link = large["link"]
+                thumbnail = large["link"]
                 # link_with_play_button = large["link_with_play_button"]
-                return link
+                width = video_data["width"]
+                height = video_data["height"]
+                return {
+                    "thumbnail": thumbnail,
+                    "width": width,
+                    "height": height,
+                }
             else:
                 raise HTTPException(
                     status_code=403,

@@ -50,6 +50,8 @@ class PublicItemLinkController:
         sb.media_prefix as source_bucket_media_prefix,
 
         iv.id as item_vimeo_id,
+        iv.width as item_vimeo_width,
+        iv.height as item_vimeo_height,
         iv.title as item_vimeo_title,
         iv.thumbnail as item_vimeo_thumbnail,
         iv.video_id as item_vimeo_video_id,
@@ -110,6 +112,8 @@ class PublicItemLinkController:
 
                 item_vimeo = ItemVimeo(
                     id=row["item_vimeo_id"],
+                    width=row["item_vimeo_width"],
+                    height=row["item_vimeo_height"],
                     title=row["item_vimeo_title"],
                     thumbnail=row["item_vimeo_thumbnail"],
                     video_id=row["item_vimeo_video_id"],

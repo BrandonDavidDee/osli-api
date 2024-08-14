@@ -14,4 +14,6 @@ class ItemVimeo(ItemBase):
     title: str | None = None
     thumbnail: str | None = None
     video_id: str
+    height: int | None = None
+    width: int | None = None
     source: SourceVimeo | None = None

@@ -110,6 +110,8 @@ class ItemVimeo(Base):
     video_id = Column(String(255), nullable=False)
     title = Column(String(255))
     thumbnail = Column(String)
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
     notes = Column(String)
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(Integer, ForeignKey("auth_user.id"))
