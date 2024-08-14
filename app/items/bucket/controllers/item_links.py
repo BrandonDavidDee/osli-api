@@ -9,7 +9,8 @@ from app.items.models import ItemLink
 
 class ItemBucketLinkController(ItemLinkController):
     def __init__(self, token_data: AccessTokenData, item_id: int):
-        super().__init__(token_data, item_id)
+        super().__init__(token_data)
+        self.item_id = item_id
 
     async def item_link_create(self, payload: ItemLink):
         new_link = self.generate_link()

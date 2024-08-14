@@ -9,10 +9,25 @@ from app.users.models import User
 
 
 class ItemLinkController(BaseController):
-    def __init__(self, token_data: AccessTokenData, item_id: int):
+    def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
-        self.item_id = item_id
         self.site_url = os.getenv("SITE_URL")
+
+    async def link_availability(self, link: str) -> bool:
+        query = "SELECT * FROM item_link WHERE link = $1"
+        values: tuple = (link,)
+        result: Record = await self.db.select_one(query, *values)
+        return bool(result)
+
+    async def link_update(self, item_link_id: int, payload: ItemLink) -> ItemLink:
+        query = "UPDATE item_link SET link = $1 WHERE id = $2 RETURNING link"
+        values: tuple = (
+            payload.link,
+            item_link_id,
+        )
+        result = await self.db.insert(query, *values)
+        payload.link = self.make_public_url(result["link"])
+        return payload
 
     def assemble_item_link(self, row: Record) -> ItemLink:
         view_count = row["link_view_count"] if row["link_view_count"] else 0

@@ -4,7 +4,7 @@ from app.items.item_links.controller import ItemLinkController
 
 class ItemVimeoSaveController(ItemLinkController):
     def __init__(self, token_data: AccessTokenData, item_id: int):
-        super().__init__(token_data, item_id)
+        super().__init__(token_data)
         self.item_id = item_id
 
     async def save_item(self):
