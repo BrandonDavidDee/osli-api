@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.galleries.controllers.gallery_detail import GalleryDetailController
-from app.galleries.controllers.gallery_links import GalleryLinkController
+from app.galleries.controllers.gallery_links import (
+    GalleryLinkController,
+    GalleryLinkUpdateController,
+)
 from app.galleries.controllers.gallery_list import GalleryListController
 from app.galleries.models import Gallery, GalleryItemCreate, GalleryLink
 
@@ -85,8 +88,12 @@ async def gallery_link_update(
     gallery_id: int,
     gallery_link_id: int,
     payload: GalleryLink,
+    link_only: bool = False,
     token_data: AccessTokenData = Depends(get_current_user),
 ):
+    if link_only:
+        controller = GalleryLinkUpdateController(token_data)
+        return await controller.link_only_update(gallery_link_id, payload)
     controller = GalleryLinkController(token_data, gallery_id)
     return await controller.gallery_link_update(gallery_link_id, payload)
 
@@ -99,3 +106,11 @@ async def gallery_link_delete(
 ):
     controller = GalleryLinkController(token_data, gallery_id)
     return await controller.gallery_link_delete(gallery_link_id)
+
+
+@router.get("/link-availability/{link}")
+async def link_availability_check(
+    link: str, token_data: AccessTokenData = Depends(get_current_user)
+):
+    controller = GalleryLinkUpdateController(token_data)
+    return await controller.link_availability(link)

@@ -9,15 +9,38 @@ from app.galleries.models import Gallery, GalleryLink
 from app.users.models import User
 
 
-class GalleryLinkController(BaseController):
-    def __init__(self, token_data: AccessTokenData, gallery_id: int):
+class GalleryLinkUpdateController(BaseController):
+    def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
-        self.gallery_id = gallery_id
         self.site_url = os.getenv("SITE_URL")
 
     def make_public_url(self, link: str) -> str:
         base = self.site_url if self.site_url else "https://localhost:9000"
         return f"{base}/#/share/gallery/{link}"
+
+    async def link_availability(self, link: str) -> bool:
+        query = "SELECT * FROM gallery_link WHERE link = $1"
+        values: tuple = (link,)
+        result: Record = await self.db.select_one(query, *values)
+        return bool(result)
+
+    async def link_only_update(
+        self, gallery_link_id: int, payload: GalleryLink
+    ) -> GalleryLink:
+        query = "UPDATE gallery_link SET link = $1 WHERE id = $2 RETURNING link"
+        values: tuple = (
+            payload.link,
+            gallery_link_id,
+        )
+        result = await self.db.insert(query, *values)
+        payload.link = self.make_public_url(result["link"])
+        return payload
+
+
+class GalleryLinkController(GalleryLinkUpdateController):
+    def __init__(self, token_data: AccessTokenData, gallery_id: int):
+        super().__init__(token_data)
+        self.gallery_id = gallery_id
 
     async def gallery_link_create(self, payload: GalleryLink):
         new_link = self.generate_link()
