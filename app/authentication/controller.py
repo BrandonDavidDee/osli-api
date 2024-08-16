@@ -39,13 +39,18 @@ class AuthControllerBase:
         if not record:
             return None
         scopes: list[str] = record["scopes"].split(",") if record["scopes"] else []
+        is_admin = record["is_admin"]
+        if is_admin:
+            scopes.append("is_admin")
         user = UserInDB(
             id=record["id"],
             is_active=record["is_active"],
+            is_admin=is_admin,
             username=record["username"],
             hashed_password=record["hashed_password"],
             scopes=scopes,
         )
+
         return user
 
     async def create_token_pair(self, user: UserInDB) -> TokenPair:
