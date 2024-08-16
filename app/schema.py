@@ -1,3 +1,5 @@
+# type: ignore
+
 from sqlalchemy import (
     Boolean,
     Column,
