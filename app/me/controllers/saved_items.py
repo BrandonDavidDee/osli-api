@@ -26,7 +26,7 @@ class SavedItemsController(BaseController):
         LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id 
         WHERE s.created_by_id = $1
         ORDER BY s.date_created DESC"""
-        values: tuple = (int(self.token_data.user_id),)
+        values: tuple = (self.created_by_id,)
         results: list[Record] = await self.db.select_many(query, values)
         return results
 
@@ -43,11 +43,11 @@ class SavedItemsController(BaseController):
         LEFT JOIN source_vimeo AS source ON source.id = i.source_vimeo_id 
         WHERE s.created_by_id = $1
         ORDER BY s.date_created DESC"""
-        values: tuple = (int(self.token_data.user_id),)
+        values: tuple = (self.created_by_id,)
         results: list[Record] = await self.db.select_many(query, values)
         return results
 
-    async def get_saved_items(self):
+    async def get_saved_items(self) -> list[SavedItem]:
         items_bucket: list[Record] = await self.get_saved_bucket_items()
         items_vimeo: list[Record] = await self.get_saved_vimeo_items()
         output: list[SavedItem] = []

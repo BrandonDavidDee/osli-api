@@ -6,13 +6,15 @@ class MyLinksController(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
-    async def get_gallery_links(self):
-        pass
+    @staticmethod
+    async def get_gallery_links() -> list:
+        return []
 
-    async def get_item_links(self):
-        pass
+    @staticmethod
+    async def get_item_links() -> list:
+        return []
 
-    async def get_links(self):
+    async def get_links(self) -> dict:
         return {
             "gallery": await self.get_gallery_links(),
             "item": await self.get_item_links(),
