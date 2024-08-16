@@ -39,7 +39,7 @@ class KeyEncryptionController:
     def decrypt(self, encrypted_data, passphrase, salt) -> str:
         encoded_pass: bytes = self.encode_passphrase(passphrase)
         encoded_salt: bytes = self.get_salt(salt)
-        encrypted_data: bytes = base64.urlsafe_b64decode(encrypted_data.encode("utf-8"))
+        encrypted_data = base64.urlsafe_b64decode(encrypted_data.encode("utf-8"))
         extracted_salt = encrypted_data[:44]  # 32 bytes encoded to 44 characters
         if extracted_salt != encoded_salt:
             raise ValueError("Invalid salt")
@@ -73,8 +73,11 @@ class BaseController:
     def __init__(self, token_data: AccessTokenData):
         # token_data isn't really doing anything yet, but is being structured like this for
         # multi-tenant database pooling and / or for possible permissions restrictions in the future.
-        self.now = datetime.now(tz=timezone.utc)
+        self.created_by_id = (
+            int(token_data.user_id) if token_data.user_id is not None else None
+        )
         self.token_data = token_data
+        self.now = datetime.now(tz=timezone.utc)
         self.db = db
 
     @staticmethod

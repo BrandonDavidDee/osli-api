@@ -178,8 +178,7 @@ class GalleryDetailController(BaseController):
         created_by_id)
         VALUES ($1, $2, $3, $4, $5) 
         RETURNING *"""
-        created_by_id = int(self.token_data.user_id)
-
+        created_by_id = self.created_by_id
         if payload.source_type == SourceType.BUCKET:
             values: tuple = (
                 self.gallery_id,
@@ -189,7 +188,7 @@ class GalleryDetailController(BaseController):
                 created_by_id,
             )
         elif payload.source_type == SourceType.VIMEO:
-            values: tuple = (
+            values = (
                 self.gallery_id,
                 None,
                 payload.item_id,

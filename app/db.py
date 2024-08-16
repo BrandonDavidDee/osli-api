@@ -29,13 +29,13 @@ class Database:
         if self.pool is not None:
             await self.pool.close()
 
-    async def select_many(self, query: str, *values) -> list[Record]:
+    async def select_many(self, query: str, values) -> list[Record]:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
-                    result: list[Record] = await connection.fetch(query, *values)
+                    result: list[Record] = await connection.fetch(query, **values)
                     # return [dict(row) for row in result]
                     return result
                 except Exception as exc:

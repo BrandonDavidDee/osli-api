@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from asyncpg import Record
 from fastapi import HTTPException
@@ -54,7 +55,7 @@ class GalleryLinkController(GalleryLinkUpdateController):
             new_link,
             payload.is_active,
             payload.expiration_date,
-            int(self.token_data.user_id),
+            self.created_by_id,
         )
         await self.db.insert(query, *values)
 
@@ -118,7 +119,8 @@ class GalleryLinkController(GalleryLinkUpdateController):
                     ),
                 )
                 links.append(gallery_link)
-        links.sort(key=lambda x: x.date_created, reverse=True)
+        # links.sort(key=lambda x: x.date_created, reverse=True)
+        links.sort(key=lambda x: x.date_created or datetime.min, reverse=True)
         gallery.links = links
 
         return gallery

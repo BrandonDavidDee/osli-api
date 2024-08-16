@@ -18,7 +18,7 @@ class GalleryListController(BaseController):
             payload.title,
             "grid",
             payload.description,
-            int(self.token_data.user_id),
+            self.created_by_id,
         )
         result: Record = await self.db.insert(query, *values)
         return result["id"]
