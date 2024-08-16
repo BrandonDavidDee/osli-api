@@ -1,7 +1,7 @@
 import os
 
-from asyncpg import Record
-from fastapi import HTTPException
+from asyncpg import Connection, Record
+from fastapi import HTTPException, Response
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
@@ -15,8 +15,10 @@ from app.users.models import User
 
 class GalleryAssemblyStub:
     @staticmethod
-    def get_filename(path) -> str:
-        return os.path.basename(path)
+    def get_filename(path: str | None) -> str | None:
+        if path is None:
+            return None
+        return str(os.path.basename(path))
 
     def assemble_gallery(
         self,
@@ -95,7 +97,9 @@ class GalleryDetailController(BaseController):
         self.assembly_stub = GalleryAssemblyStub()
 
     @staticmethod
-    async def update_item_order(connection, items: list[GalleryItem]):
+    async def update_item_order(
+        connection: Connection, items: list[GalleryItem]
+    ) -> None:
         for item in items:
             query = "UPDATE gallery_item SET item_order = $1 WHERE id = $2"
             values: tuple = (
@@ -104,7 +108,7 @@ class GalleryDetailController(BaseController):
             )
             await connection.fetchrow(query, values)
 
-    async def gallery_update(self, gallery_id: int, payload: Gallery):
+    async def gallery_update(self, gallery_id: int, payload: Gallery) -> Gallery:
         async with self.db.get_connection() as connection:
             try:
                 query = "UPDATE gallery SET title = $1, description = $2 WHERE id = $3"
@@ -169,7 +173,7 @@ class GalleryDetailController(BaseController):
             raise HTTPException(status_code=404)
         return self.assembly_stub.assemble_gallery(result=result)
 
-    async def gallery_item_create(self, payload: GalleryItemCreate):
+    async def gallery_item_create(self, payload: GalleryItemCreate) -> int:
         query = """INSERT INTO gallery_item
         (gallery_id, 
         item_bucket_id, 
@@ -198,8 +202,9 @@ class GalleryDetailController(BaseController):
         else:
             raise HTTPException(status_code=500, detail="Unknown Source Type")
         result: Record = await self.db.insert(query, values)
-        return result["id"]
+        inserted_item_id: int = result["id"]
+        return inserted_item_id
 
-    async def gallery_item_delete(self, gallery_item_id: int):
+    async def gallery_item_delete(self, gallery_item_id: int) -> Response:
         query = "DELETE FROM gallery_item WHERE id = $1"
         return await self.db.delete_one(query, gallery_item_id)

@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from asyncpg import Record
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
@@ -38,11 +38,11 @@ class GalleryLinkUpdateController(BaseController):
 
 
 class GalleryLinkController(GalleryLinkUpdateController):
-    def __init__(self, token_data: AccessTokenData, gallery_id: int):
+    def __init__(self, token_data: AccessTokenData, gallery_id: int) -> None:
         super().__init__(token_data)
         self.gallery_id = gallery_id
 
-    async def gallery_link_create(self, payload: GalleryLink):
+    async def gallery_link_create(self, payload: GalleryLink) -> int:
         new_link = self.generate_link()
         query = """INSERT INTO gallery_link
         (gallery_id, title, link, is_active, expiration_date, created_by_id)
@@ -56,9 +56,11 @@ class GalleryLinkController(GalleryLinkUpdateController):
             payload.expiration_date,
             self.created_by_id,
         )
-        await self.db.insert(query, values)
+        result = await self.db.insert(query, values)
+        inserted_id: int = result["id"]
+        return inserted_id
 
-    async def get_gallery_links(self):
+    async def get_gallery_links(self) -> Gallery:
         query = """SELECT 
         g.*,
         
@@ -124,7 +126,9 @@ class GalleryLinkController(GalleryLinkUpdateController):
 
         return gallery
 
-    async def gallery_link_update(self, gallery_link_id: int, payload: GalleryLink):
+    async def gallery_link_update(
+        self, gallery_link_id: int, payload: GalleryLink
+    ) -> GalleryLink:
         query = "UPDATE gallery_link SET title = $1, is_active = $2 WHERE id = $3 RETURNING *"
         values: tuple = (
             payload.title,
@@ -135,7 +139,7 @@ class GalleryLinkController(GalleryLinkUpdateController):
         payload.title = result["title"]
         return payload
 
-    async def gallery_link_delete(self, gallery_link_id: int):
+    async def gallery_link_delete(self, gallery_link_id: int) -> Response:
         query = "DELETE FROM gallery_link WHERE id = $1"
         values: tuple = (gallery_link_id,)
         return await self.db.delete_one(query, values)

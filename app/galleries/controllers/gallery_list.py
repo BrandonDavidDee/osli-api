@@ -10,7 +10,7 @@ class GalleryListController(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
-    async def gallery_create(self, payload: Gallery):
+    async def gallery_create(self, payload: Gallery) -> int:
         query = """INSERT INTO gallery 
         (title, view_type, description, created_by_id)
         VALUES ($1, $2, $3, $4) RETURNING *"""
@@ -21,7 +21,8 @@ class GalleryListController(BaseController):
             self.created_by_id,
         )
         result: Record = await self.db.insert(query, values)
-        return result["id"]
+        inserted_id: int = result["id"]
+        return inserted_id
 
     async def get_galleries(self) -> list[Gallery]:
         query = """SELECT 
