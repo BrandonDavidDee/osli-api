@@ -30,6 +30,8 @@ class Database:
             await self.pool.close()
 
     async def select_many(self, query: str, *values) -> list[Record]:
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
@@ -40,6 +42,8 @@ class Database:
                     raise HTTPException(status_code=500, detail=str(exc))
 
     async def select_one(self, query: str, *values) -> Record | None:
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
@@ -51,6 +55,8 @@ class Database:
                     raise HTTPException(status_code=500, detail=str(exc))
 
     async def insert(self, query: str, *values) -> dict:
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
@@ -65,6 +71,8 @@ class Database:
                     raise HTTPException(status_code=500, detail=str(exc))
 
     async def delete_one(self, query: str, *values) -> Response:
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
@@ -75,6 +83,8 @@ class Database:
 
     @asynccontextmanager
     async def get_connection(self, unique_err_message: str | None = None):
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
