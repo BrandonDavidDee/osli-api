@@ -3,6 +3,7 @@ from fastapi import BackgroundTasks, HTTPException
 
 from app.db import db
 from app.galleries.controllers.gallery_detail import GalleryAssemblyStub
+from app.galleries.models import Gallery
 
 
 class PublicGalleryLinkController:
@@ -11,7 +12,7 @@ class PublicGalleryLinkController:
         self.link = link
         self.assembly_stub = GalleryAssemblyStub()
 
-    async def update_view_count(self, view_count: int, gallery_link_id: int):
+    async def update_view_count(self, view_count: int, gallery_link_id: int) -> None:
         query = "UPDATE gallery_link SET view_count = $1 WHERE id = $2 RETURNING *"
         updated_view_count = view_count + 1
         values: tuple = (
@@ -20,7 +21,7 @@ class PublicGalleryLinkController:
         )
         await self.db.insert(query, values)
 
-    async def get_gallery_link(self, bg_tasks: BackgroundTasks):
+    async def get_gallery_link(self, bg_tasks: BackgroundTasks) -> Gallery:
         query = """SELECT 
         gl.id as gallery_link_id,
         gl.view_count,

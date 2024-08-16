@@ -17,10 +17,12 @@ class PublicItemLinkController:
         self.link = link
 
     @staticmethod
-    def get_filename(path) -> str:
-        return os.path.basename(path)
+    def get_filename(path: str | None) -> str | None:
+        if path is None:
+            return None
+        return str(os.path.basename(path))
 
-    async def update_view_count(self, view_count: int, item_link_id: int):
+    async def update_view_count(self, view_count: int, item_link_id: int) -> None:
         query = "UPDATE item_link SET view_count = $1 WHERE id = $2 RETURNING *"
         updated_view_count = view_count + 1
         values: tuple = (
@@ -29,7 +31,7 @@ class PublicItemLinkController:
         )
         await self.db.insert(query, values)
 
-    async def get_item_link(self, bg_tasks: BackgroundTasks):
+    async def get_item_link(self, bg_tasks: BackgroundTasks) -> PublicItemLink:
         query = """SELECT 
         il.id as item_link_id,
         il.view_count,
