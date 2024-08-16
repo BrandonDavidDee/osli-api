@@ -13,7 +13,7 @@ class ItemBucketSaveController(ItemLinkController):
             self.item_id,
             int(self.token_data.user_id),
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
 
     async def delete_saved_item(self):
         query = "DELETE FROM saved_item_bucket WHERE item_bucket_id = $1 AND created_by_id = $2"
@@ -21,4 +21,4 @@ class ItemBucketSaveController(ItemLinkController):
             self.item_id,
             int(self.token_data.user_id),
         )
-        await self.db.delete_one(query, *values)
+        await self.db.delete_one(query, values)

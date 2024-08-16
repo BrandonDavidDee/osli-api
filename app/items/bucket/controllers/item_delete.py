@@ -18,5 +18,5 @@ class ItemBucketDeleteController(S3ApiController):
                 self.source_id,
                 item_id,
             )
-            await self.db.delete_one(query, *values)
+            await self.db.delete_one(query, values)
         return result

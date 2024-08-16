@@ -27,7 +27,7 @@ class SavedItemsController(BaseController):
         WHERE s.created_by_id = $1
         ORDER BY s.date_created DESC"""
         values: tuple = (int(self.token_data.user_id),)
-        results: list[Record] = await self.db.select_many(query, *values)
+        results: list[Record] = await self.db.select_many(query, values)
         return results
 
     async def get_saved_vimeo_items(self) -> list[Record]:
@@ -44,7 +44,7 @@ class SavedItemsController(BaseController):
         WHERE s.created_by_id = $1
         ORDER BY s.date_created DESC"""
         values: tuple = (int(self.token_data.user_id),)
-        results: list[Record] = await self.db.select_many(query, *values)
+        results: list[Record] = await self.db.select_many(query, values)
         return results
 
     async def get_saved_items(self):

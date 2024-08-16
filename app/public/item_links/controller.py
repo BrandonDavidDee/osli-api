@@ -27,7 +27,7 @@ class PublicItemLinkController:
             updated_view_count,
             item_link_id,
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
 
     async def get_item_link(self, bg_tasks: BackgroundTasks):
         query = """SELECT 

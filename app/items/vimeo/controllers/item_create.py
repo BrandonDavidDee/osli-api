@@ -29,4 +29,4 @@ class ItemVimeoCreateController(VimeoApiController):
             payload.notes,
             int(self.token_data.user_id),
         )
-        return await self.db.insert(query, *values)
+        return await self.db.insert(query, values)

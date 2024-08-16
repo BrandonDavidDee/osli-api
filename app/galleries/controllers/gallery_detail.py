@@ -102,7 +102,7 @@ class GalleryDetailController(BaseController):
                 item.item_order,
                 item.id,
             )
-            await connection.fetchrow(query, *values)
+            await connection.fetchrow(query, values)
 
     async def gallery_update(self, gallery_id: int, payload: Gallery):
         async with self.db.get_connection() as connection:
@@ -113,7 +113,7 @@ class GalleryDetailController(BaseController):
                     payload.description,
                     gallery_id,
                 )
-                await connection.fetchrow(query, *values)
+                await connection.fetchrow(query, values)
                 await self.update_item_order(connection, payload.items)
                 return payload
             except HTTPException as exc:
@@ -197,7 +197,7 @@ class GalleryDetailController(BaseController):
             )
         else:
             raise HTTPException(status_code=500, detail="Unknown Source Type")
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         return result["id"]
 
     async def gallery_item_delete(self, gallery_item_id: int):

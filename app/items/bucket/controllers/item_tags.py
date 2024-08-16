@@ -17,7 +17,7 @@ class ItemBucketTagController(BaseController):
             payload.tag.id,
             self.item_id,
         )
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         payload.id = result["id"]
         return payload
 

@@ -82,7 +82,7 @@ class ItemVimeoListController(SourceVimeoDetailController):
                 payload.filter,
                 self.source_id,
             )
-            result: Record = await self.db.select_many(query, *values)
+            result: Record = await self.db.select_many(query, values)
 
         output: list[ItemVimeo] = []
 

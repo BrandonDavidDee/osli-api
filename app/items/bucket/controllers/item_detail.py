@@ -38,7 +38,7 @@ class ItemBucketDetailController(BaseController):
             int(self.token_data.user_id),
             self.item_id,
         )
-        result: Record = await self.db.select_many(query, *values)
+        result: Record = await self.db.select_many(query, values)
 
         if not result:
             raise HTTPException(status_code=404)
@@ -76,7 +76,7 @@ class ItemBucketDetailController(BaseController):
             payload.notes,
             self.item_id,
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
         return payload
 
     async def get_related_gallery_items(self):
@@ -87,7 +87,7 @@ class ItemBucketDetailController(BaseController):
         ORDER BY g.date_created DESC
         """
         values: tuple = (self.item_id,)
-        results: list[Record] = await self.db.select_many(query, *values)
+        results: list[Record] = await self.db.select_many(query, values)
         output: list[Gallery] = []
         seen_galleries = {}
         for row in results:
@@ -108,7 +108,7 @@ class ItemBucketDetailController(BaseController):
         LEFT JOIN auth_user u ON u.id = sib.created_by_id
         WHERE sib.item_bucket_id = $1"""
         values: tuple = (self.item_id,)
-        results: list[Record] = await self.db.select_many(query, *values)
+        results: list[Record] = await self.db.select_many(query, values)
         output: list[str] = []
         for row in results:
             username = row["username"]

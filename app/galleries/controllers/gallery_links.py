@@ -22,7 +22,7 @@ class GalleryLinkUpdateController(BaseController):
     async def link_availability(self, link: str) -> bool:
         query = "SELECT * FROM gallery_link WHERE link = $1"
         values: tuple = (link,)
-        result: Record = await self.db.select_one(query, *values)
+        result: Record = await self.db.select_one(query, values)
         return bool(result)
 
     async def link_only_update(
@@ -33,7 +33,7 @@ class GalleryLinkUpdateController(BaseController):
             payload.link,
             gallery_link_id,
         )
-        result = await self.db.insert(query, *values)
+        result = await self.db.insert(query, values)
         payload.link = self.make_public_url(result["link"])
         return payload
 
@@ -57,7 +57,7 @@ class GalleryLinkController(GalleryLinkUpdateController):
             payload.expiration_date,
             self.created_by_id,
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
 
     async def get_gallery_links(self):
         query = """SELECT 
@@ -132,11 +132,11 @@ class GalleryLinkController(GalleryLinkUpdateController):
             payload.is_active,
             gallery_link_id,
         )
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         payload.title = result["title"]
         return payload
 
     async def gallery_link_delete(self, gallery_link_id: int):
         query = "DELETE FROM gallery_link WHERE id = $1"
         values: tuple = (gallery_link_id,)
-        return await self.db.delete_one(query, *values)
+        return await self.db.delete_one(query, values)

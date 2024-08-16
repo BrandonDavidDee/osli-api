@@ -18,7 +18,7 @@ class PublicGalleryLinkController:
             updated_view_count,
             gallery_link_id,
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
 
     async def get_gallery_link(self, bg_tasks: BackgroundTasks):
         query = """SELECT 

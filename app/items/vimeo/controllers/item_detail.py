@@ -38,7 +38,7 @@ class ItemVimeoDetailController(BaseController):
             int(self.token_data.user_id),
             self.item_id,
         )
-        result: Record = await self.db.select_many(query, *values)
+        result: Record = await self.db.select_many(query, values)
 
         if not result:
             raise HTTPException(status_code=404)
@@ -75,5 +75,5 @@ class ItemVimeoDetailController(BaseController):
             payload.notes,
             self.item_id,
         )
-        await self.db.insert(query, *values)
+        await self.db.insert(query, values)
         return payload

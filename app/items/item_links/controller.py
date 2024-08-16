@@ -16,7 +16,7 @@ class ItemLinkController(BaseController):
     async def link_availability(self, link: str) -> bool:
         query = "SELECT * FROM item_link WHERE link = $1"
         values: tuple = (link,)
-        result: Record = await self.db.select_one(query, *values)
+        result: Record = await self.db.select_one(query, values)
         return bool(result)
 
     async def link_update(self, item_link_id: int, payload: ItemLink) -> ItemLink:
@@ -25,7 +25,7 @@ class ItemLinkController(BaseController):
             payload.link,
             item_link_id,
         )
-        result = await self.db.insert(query, *values)
+        result = await self.db.insert(query, values)
         payload.link = self.make_public_url(result["link"])
         return payload
 
@@ -69,11 +69,11 @@ class ItemLinkController(BaseController):
             payload.is_active,
             item_link_id,
         )
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         payload.title = result["title"]
         return payload
 
     async def item_link_delete(self, item_link_id: int):
         query = "DELETE FROM item_link WHERE id = $1 RETURNING *"
         values: tuple = (item_link_id,)
-        return await self.db.delete_one(query, *values)
+        return await self.db.delete_one(query, values)

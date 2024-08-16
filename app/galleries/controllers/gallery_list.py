@@ -20,7 +20,7 @@ class GalleryListController(BaseController):
             payload.description,
             self.created_by_id,
         )
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         return result["id"]
 
     async def get_galleries(self) -> list[Gallery]:

@@ -49,7 +49,7 @@ class BatchUploadController(S3ApiController):
                     Key=key,
                     ContentType=file.content_type,
                 )
-                result: Record = await self.db.insert(query, *values)
+                result: Record = await self.db.insert(query, values)
                 output.append(ItemBucket(**result))
             except ClientError as e:
                 raise HTTPException(status_code=500, detail="S3 Client Error")

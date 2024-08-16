@@ -1,7 +1,8 @@
 import os
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 
-from asyncpg import Record, UniqueViolationError, create_pool
+from asyncpg import Connection, Record, UniqueViolationError, create_pool
 from fastapi import HTTPException, Response
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -29,60 +30,78 @@ class Database:
         if self.pool is not None:
             await self.pool.close()
 
-    async def select_many(self, query: str, values) -> list[Record]:
+    async def select_many(
+        self, query: str, values: tuple[Any, ...] | Any | None = None
+    ) -> list[Record]:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
-                    result: list[Record] = await connection.fetch(query, **values)
-                    # return [dict(row) for row in result]
+                    if values is None:
+                        result: list[Record] = await connection.fetch(query)
+                    elif isinstance(values, tuple):
+                        result = await connection.fetch(query, *values)
+                    else:
+                        result = await connection.fetch(query, values)
                     return result
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
-    async def select_one(self, query: str, *values) -> Record | None:
+    async def select_one(
+        self, query: str, values: tuple[Any, ...] | Any
+    ) -> Record | None:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
-                    result: Record = await connection.fetchrow(query, *values)
+                    if isinstance(values, tuple):
+                        result: Record = await connection.fetchrow(query, *values)
+                    else:
+                        result = await connection.fetchrow(query, values)
                     if not result:
                         return None
                     return result
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
-    async def insert(self, query: str, *values) -> dict:
+    async def insert(self, query: str, values: tuple[Any, ...] | Any) -> dict:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
-                    result = await connection.fetchrow(query, *values)
+                    if isinstance(values, tuple):
+                        result = await connection.fetchrow(query, *values)
+                    else:
+                        result = await connection.fetchrow(query, values)
                     return dict(result)
                 except UniqueViolationError:
-                    # raising this here with this message only works if slugs are the only cols with a unique constr
                     raise HTTPException(
-                        status_code=500, detail="That slug is already reserved"
+                        status_code=500, detail="Unique Violation Error!"
                     )
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
-    async def delete_one(self, query: str, *values) -> Response:
+    async def delete_one(self, query: str, values: tuple[Any, ...] | Any) -> Response:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
-                    await connection.execute(query, *values)
+                    if isinstance(values, tuple):
+                        await connection.execute(query, *values)
+                    else:
+                        await connection.execute(query, values)
                     return Response()
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
     @asynccontextmanager
-    async def get_connection(self, unique_err_message: str | None = None):
+    async def get_connection(
+        self, unique_err_message: str | None = None
+    ) -> AsyncGenerator[Connection, None]:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.pool.acquire() as connection:

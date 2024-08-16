@@ -26,7 +26,7 @@ class ItemVimeoLinkController(ItemLinkController):
             int(self.token_data.user_id),
             payload.is_active,
         )
-        return await self.db.insert(query, *values)
+        return await self.db.insert(query, values)
 
     async def get_item_links(self):
         query = """SELECT 

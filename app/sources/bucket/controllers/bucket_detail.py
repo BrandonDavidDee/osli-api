@@ -54,5 +54,5 @@ class SourceBucketDetailController(S3ApiController):
             payload.grid_view,
             self.source_id,
         )
-        result: Record = await self.db.insert(query, *values)
+        result: Record = await self.db.insert(query, values)
         return result["id"]

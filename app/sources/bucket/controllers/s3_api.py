@@ -73,7 +73,7 @@ class S3ApiController(BaseController):
                             obj["size"],
                             self.token_data.user_id,
                         )
-                        result = await connection.fetchrow(query, *values)
+                        result = await connection.fetchrow(query, values)
                         output.append(dict(result))
                     return output
                 except Exception as exc:
