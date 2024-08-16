@@ -12,10 +12,10 @@ class SourceBucketDetailController(S3ApiController):
         super().__init__(token_data, source_id)
         self.source_id = source_id
 
-    async def source_create(self):
+    async def source_create(self) -> None:
         pass
 
-    async def source_detail(self):
+    async def source_detail(self) -> SourceBucket:
         result: Record = await self.db.select_one(
             "SELECT * FROM source_bucket WHERE id = ($1)", self.source_id
         )
@@ -39,6 +39,10 @@ class SourceBucketDetailController(S3ApiController):
         media_prefix = $5,
         grid_view = $6
         WHERE id = $7 RETURNING *"""
+
+        if payload.access_key_id is None or payload.secret_access_key is None:
+            raise HTTPException(status_code=500, detail="Access Key ID is required")
+
         encrypted_access_key_id = self.encryption.encrypt_api_key(
             payload.access_key_id, passphrase
         )
@@ -55,4 +59,5 @@ class SourceBucketDetailController(S3ApiController):
             self.source_id,
         )
         result: Record = await self.db.insert(query, values)
-        return result["id"]
+        inserted_id: int = result["id"]
+        return inserted_id

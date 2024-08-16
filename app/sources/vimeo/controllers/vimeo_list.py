@@ -10,7 +10,7 @@ class SourcesVimeoListController(BaseController):
     def __init__(self, token_data: AccessTokenData):
         super().__init__(token_data)
 
-    async def get_list(self):
+    async def get_list(self) -> list[SourceVimeo]:
         results: list[Record] = await self.db.select_many("SELECT * FROM source_vimeo")
         output: list[SourceVimeo] = []
         for row in results:

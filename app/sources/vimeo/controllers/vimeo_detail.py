@@ -12,10 +12,10 @@ class SourceVimeoDetailController(VimeoApiController):
         super().__init__(token_data, source_id)
         self.source_id = source_id
 
-    async def source_create(self):
+    async def source_create(self) -> None:
         pass
 
-    async def source_detail(self):
+    async def source_detail(self) -> SourceVimeo:
         result: Record = await self.db.select_one(
             "SELECT * FROM source_vimeo WHERE id = ($1)", self.source_id
         )
@@ -57,4 +57,5 @@ class SourceVimeoDetailController(VimeoApiController):
             self.source_id,
         )
         result: Record = await self.db.insert(query, values)
-        return result["id"]
+        inserted_id: int = result["id"]
+        return inserted_id

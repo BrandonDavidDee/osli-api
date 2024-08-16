@@ -12,14 +12,16 @@ router = APIRouter()
 
 
 @router.get("")
-async def source_list(token_data: AccessTokenData = Depends(get_current_user)):
+async def source_list(
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> list[SourceBucket]:
     return await SourceBucketListController(token_data).get_list()
 
 
 @router.get("/{source_id}")
 async def source_detail(
     source_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> SourceBucket:
     controller = SourceBucketDetailController(token_data, source_id)
     return await controller.source_detail()
 
@@ -30,6 +32,6 @@ async def source_update(
     passphrase: str,
     payload: SourceBucket,
     token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
-):
+) -> int:
     controller = SourceBucketDetailController(token_data, source_id)
     return await controller.source_update(passphrase, payload)

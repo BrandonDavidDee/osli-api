@@ -33,14 +33,17 @@ class S3ApiController(BaseController):
             aws_access_key_id=decrypted_access_key_id,
             aws_secret_access_key=decrypted_secret,
         )
-        return source["bucket_name"]
+        bucket_name: str = source["bucket_name"]
+        return bucket_name
 
-    async def s3_object_delete(self, encryption_key: str, key: str):
+    async def s3_object_delete(self, encryption_key: str, key: str) -> dict:
         bucket_name: str = await self.initialize_s3_client(encryption_key)
         """
         delete_object always returns a 204 whether the object exists or not
         anything other than this should be regarded as a client error
         """
+        if not self.s3_client:
+            raise HTTPException(status_code=500, detail="s3 client not initialized")
         response = self.s3_client.delete_object(Bucket=bucket_name, Key=key)
         try:
             meta = response["ResponseMetadata"]
@@ -48,12 +51,14 @@ class S3ApiController(BaseController):
             if status == 204:
                 return {"result": "Deleted Successfully"}
             else:
-                return HTTPException(status_code=500, detail="S3 Client Error")
+                raise HTTPException(status_code=500, detail="S3 Client Error")
         except KeyError:
-            return HTTPException(status_code=500, detail="S3 Client Error")
+            raise HTTPException(status_code=500, detail="S3 Client Error")
 
-    async def post_group(self, objects: list[dict]):
+    async def post_group(self, objects: list[dict]) -> list[dict]:
         output: list[dict] = []
+        if self.db.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
         async with self.db.pool.acquire() as connection:
             async with connection.transaction():
                 try:
@@ -79,13 +84,13 @@ class S3ApiController(BaseController):
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
-    async def import_from_source(self):
+    async def import_from_source(self, encryption_key: str) -> list[dict]:
         # TODO: this method needs a way to filter out directories, extensions and mime types
-        bucket_name: str = await self.initialize_s3_client()
+        bucket_name: str = await self.initialize_s3_client(encryption_key)
+        if not self.s3_client:
+            raise HTTPException(status_code=500, detail="s3 client not initialized")
         paginator = self.s3_client.get_paginator("list_objects_v2")
-
         output = []
-
         for page in paginator.paginate(Bucket=bucket_name):
             if "Contents" in page:
                 for obj in page["Contents"]:
