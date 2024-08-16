@@ -29,15 +29,14 @@ class AuthControllerBase:
     ) -> UserInDB | None:
         if user_id:
             query = "SELECT * FROM auth_user WHERE id = ($1)"
-            value = int(user_id)
+            record = await self.db.select_one(query, int(user_id))
         elif username:
             query = "SELECT * FROM auth_user WHERE username = ($1)"
-            value = username
+            record = await self.db.select_one(query, username)
         else:
             raise HTTPException(
                 status_code=500, detail="Username or User id must be provided"
             )
-        record: Record = await self.db.select_one(query, value)
         if not record:
             return None
         scopes: list[str] = record["scopes"].split(",") if record["scopes"] else []
@@ -109,7 +108,7 @@ class RefreshController(AuthControllerBase):
     async def refresh_tokens(self) -> TokenPair:
         token: str = self.get_token_from_header()
         token_sub: RefreshTokenData = await self.validate_refresh_token(token)
-        user: UserInDB = await self.get_user_in_db(
+        user: UserInDB | None = await self.get_user_in_db(
             user_id=token_sub.user_id, username=None
         )
         if not user:
