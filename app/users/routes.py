@@ -4,5 +4,5 @@ router = APIRouter()
 
 
 @router.get("/")
-async def get_user_list():
+async def get_user_list() -> str:
     return "user list root"

@@ -1,5 +1,6 @@
 import os
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Security
@@ -20,7 +21,7 @@ load_dotenv()
 
 
 @asynccontextmanager
-async def lifespan(fastapi: FastAPI):
+async def lifespan(fastapi: FastAPI) -> AsyncGenerator[None, None]:
     await db.open_conn_pool()
     yield
     await db.close_pool()
@@ -39,7 +40,7 @@ app.add_middleware(
 
 
 @app.get("/")
-def app_root():
+def app_root() -> dict:
     return {"OSLI": "(Multiple) Object Storage Library Index"}
 
 
