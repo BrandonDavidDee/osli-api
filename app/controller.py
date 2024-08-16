@@ -15,7 +15,7 @@ from app.db import db
 
 
 class KeyEncryptionController:
-    def __init__(self):
+    def __init__(self) -> None:
         self.api_key_salt: str | None = os.getenv("API_KEY_SALT")
         self.api_secret_salt: str | None = os.getenv("API_SECRET_SALT")
         self.access_token_salt: str | None = os.getenv("ACCESS_TOKEN_SALT")
@@ -24,29 +24,34 @@ class KeyEncryptionController:
     def encode_passphrase(key: str) -> bytes:
         return base64.urlsafe_b64encode(key.ljust(32)[:32].encode())
 
-    def get_salt(self, salt) -> bytes:
+    def get_salt(self, salt: str | None) -> bytes:
         if salt is None:
             raise ValueError("No salt provided")
         return self.encode_passphrase(salt)
 
-    def encrypt(self, data, passphrase, salt) -> str:
+    def encrypt(self, data: str, passphrase: str, salt: str | None) -> str:
         encoded_pass: bytes = self.encode_passphrase(passphrase)
         encoded_salt: bytes = self.get_salt(salt)
         fernet = Fernet(encoded_pass)
         encrypted: bytes = fernet.encrypt(data.encode())
         return base64.urlsafe_b64encode(encoded_salt + encrypted).decode("utf-8")
 
-    def decrypt(self, encrypted_data, passphrase, salt) -> str:
+    def decrypt(self, encrypted_data: str, passphrase: str, salt: str | None) -> str:
         encoded_pass: bytes = self.encode_passphrase(passphrase)
         encoded_salt: bytes = self.get_salt(salt)
-        encrypted_data = base64.urlsafe_b64decode(encrypted_data.encode("utf-8"))
-        extracted_salt = encrypted_data[:44]  # 32 bytes encoded to 44 characters
+        encrypted_data_bytes: bytes = base64.urlsafe_b64decode(
+            encrypted_data.encode("utf-8")
+        )
+        extracted_salt: bytes = encrypted_data_bytes[
+            :44
+        ]  # 32 bytes encoded to 44 characters
         if extracted_salt != encoded_salt:
             raise ValueError("Invalid salt")
-        encrypted = encrypted_data[44:]
+        encrypted = encrypted_data_bytes[44:]
         fernet = Fernet(encoded_pass)
         try:
-            return fernet.decrypt(encrypted).decode()
+            result: str = fernet.decrypt(encrypted).decode()
+            return result
         except InvalidToken:
             raise HTTPException(status_code=403, detail="Invalid passphrase")
 
@@ -81,23 +86,30 @@ class BaseController:
         self.db = db
 
     @staticmethod
-    def generate_link():
+    def generate_link() -> str:
         return str(uuid.uuid4())
 
     @staticmethod
-    def get_filename(path):
-        return os.path.basename(path)
+    def get_filename(path: str | None) -> str | None:
+        if path is None:
+            return None
+        return str(os.path.basename(path))
 
     @staticmethod
-    def get_mime_type(filename):
+    def get_mime_type(filename: str | None) -> str | None:
+        if filename is None:
+            return None
         mime_type, _ = mimetypes.guess_type(filename, strict=False)
         return mime_type
 
     @staticmethod
-    def random_generator(size=4, chars=string.ascii_uppercase + string.digits):
+    def random_generator(size: int = 4) -> str:
+        chars = string.ascii_uppercase + string.digits
         return "".join(random.choice(chars) for x in range(size))
 
-    def make_safe_filename(self, file_name):
+    def make_safe_filename(self, file_name: str | None) -> str | None:
+        if file_name is None:
+            return None
         base_name, extension = os.path.splitext(file_name)
         # Omit random characters and swap spaces with underscores
         safe_base_name = "".join(

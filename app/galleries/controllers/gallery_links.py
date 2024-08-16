@@ -21,8 +21,7 @@ class GalleryLinkUpdateController(BaseController):
 
     async def link_availability(self, link: str) -> bool:
         query = "SELECT * FROM gallery_link WHERE link = $1"
-        values: tuple = (link,)
-        result: Record = await self.db.select_one(query, values)
+        result: Record = await self.db.select_one(query, link)
         return bool(result)
 
     async def link_only_update(
