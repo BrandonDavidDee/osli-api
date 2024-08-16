@@ -69,7 +69,7 @@ class ItemBucketListController(SourceBucketDetailController):
             )
             AND i.source_bucket_id = $7
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
-            values: tuple = (
+            values = (
                 payload.limit,
                 payload.offset,
                 payload.filter,
@@ -78,7 +78,7 @@ class ItemBucketListController(SourceBucketDetailController):
                 payload.filter,
                 self.source_id,
             )
-            result: Record = await self.db.select_many(query, values)
+            result = await self.db.select_many(query, values)
 
         output: list[ItemBucket] = []
 

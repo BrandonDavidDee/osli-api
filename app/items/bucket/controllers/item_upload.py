@@ -16,7 +16,9 @@ class BatchUploadController(S3ApiController):
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data, source_id)
 
-    async def s3_batch_upload(self, encryption_key: str, files: list[UploadFile]):
+    async def s3_batch_upload(
+        self, encryption_key: str, files: list[UploadFile]
+    ) -> dict:
         bucket_name: str = await self.initialize_s3_client(encryption_key)
         output = []
         for (file,) in zip(files):
@@ -38,9 +40,12 @@ class BatchUploadController(S3ApiController):
                 content_type,
                 key,
                 file_size,
-                int(self.token_data.user_id),
+                self.created_by_id,
             )
             output.append(key)
+
+            if self.s3_client is None:
+                raise HTTPException(status_code=500, detail="s3 client not initialized")
 
             try:
                 self.s3_client.put_object(

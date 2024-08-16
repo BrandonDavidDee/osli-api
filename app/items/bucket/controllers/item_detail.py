@@ -16,7 +16,7 @@ class ItemBucketDetailController(BaseController):
         super().__init__(token_data)
         self.item_id = item_id
 
-    async def item_detail(self):
+    async def item_detail(self) -> ItemBucket:
         query = """SELECT 
         i.*,
         sib.id as saved_item_id,
@@ -35,7 +35,7 @@ class ItemBucketDetailController(BaseController):
         WHERE i.id = $2
         """
         values: tuple = (
-            int(self.token_data.user_id),
+            self.created_by_id,
             self.item_id,
         )
         result: Record = await self.db.select_many(query, values)
@@ -67,7 +67,7 @@ class ItemBucketDetailController(BaseController):
 
         return item
 
-    async def item_update(self, payload: ItemBucket):
+    async def item_update(self, payload: ItemBucket) -> ItemBucket:
         query = (
             "UPDATE item_bucket SET title = $1, notes = $2 WHERE id = $3 RETURNING *"
         )
@@ -79,7 +79,7 @@ class ItemBucketDetailController(BaseController):
         await self.db.insert(query, values)
         return payload
 
-    async def get_related_gallery_items(self):
+    async def get_related_gallery_items(self) -> list[Gallery]:
         query = """SELECT g.*
         FROM gallery_item gi
         LEFT JOIN gallery g ON g.id = gi.gallery_id 
@@ -116,7 +116,7 @@ class ItemBucketDetailController(BaseController):
                 output.append(username)
         return output
 
-    async def get_related(self):
+    async def get_related(self) -> dict:
         galleries = await self.get_related_gallery_items()
         saved_users = await self.get_related_saved_items()
         has_related: bool = bool(len(galleries)) or bool(len(saved_users))

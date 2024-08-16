@@ -42,8 +42,9 @@ class S3ApiController(BaseController):
         delete_object always returns a 204 whether the object exists or not
         anything other than this should be regarded as a client error
         """
-        if not self.s3_client:
+        if self.s3_client is None:
             raise HTTPException(status_code=500, detail="s3 client not initialized")
+
         response = self.s3_client.delete_object(Bucket=bucket_name, Key=key)
         try:
             meta = response["ResponseMetadata"]
@@ -87,8 +88,10 @@ class S3ApiController(BaseController):
     async def import_from_source(self, encryption_key: str) -> list[dict]:
         # TODO: this method needs a way to filter out directories, extensions and mime types
         bucket_name: str = await self.initialize_s3_client(encryption_key)
-        if not self.s3_client:
+
+        if self.s3_client is None:
             raise HTTPException(status_code=500, detail="s3 client not initialized")
+
         paginator = self.s3_client.get_paginator("list_objects_v2")
         output = []
         for page in paginator.paginate(Bucket=bucket_name):

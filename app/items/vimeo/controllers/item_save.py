@@ -7,18 +7,18 @@ class ItemVimeoSaveController(ItemLinkController):
         super().__init__(token_data)
         self.item_id = item_id
 
-    async def save_item(self):
+    async def save_item(self) -> None:
         query = "INSERT INTO saved_item_vimeo (item_vimeo_id, created_by_id) VALUES ($1, $2) RETURNING id"
         values: tuple = (
             self.item_id,
-            int(self.token_data.user_id),
+            self.created_by_id,
         )
         await self.db.insert(query, values)
 
-    async def delete_saved_item(self):
+    async def delete_saved_item(self) -> None:
         query = "DELETE FROM saved_item_vimeo WHERE item_vimeo_id = $1 AND created_by_id = $2"
         values: tuple = (
             self.item_id,
-            int(self.token_data.user_id),
+            self.created_by_id,
         )
         await self.db.delete_one(query, values)

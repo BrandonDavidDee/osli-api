@@ -13,7 +13,7 @@ async def item_link_update(
     item_link_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> ItemLink:
     controller = ItemLinkController(token_data)
     return await controller.link_update(item_link_id, payload)
 
@@ -21,6 +21,6 @@ async def item_link_update(
 @router.get("/availability/{link}")
 async def link_availability_check(
     link: str, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> bool:
     controller = ItemLinkController(token_data)
     return await controller.link_availability(link)

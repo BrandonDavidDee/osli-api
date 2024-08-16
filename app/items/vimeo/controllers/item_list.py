@@ -73,7 +73,7 @@ class ItemVimeoListController(SourceVimeoDetailController):
             )
             AND i.source_vimeo_id = $7
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
-            values: tuple = (
+            values = (
                 payload.limit,
                 payload.offset,
                 payload.filter,
@@ -82,7 +82,7 @@ class ItemVimeoListController(SourceVimeoDetailController):
                 payload.filter,
                 self.source_id,
             )
-            result: Record = await self.db.select_many(query, values)
+            result = await self.db.select_many(query, values)
 
         output: list[ItemVimeo] = []
 

@@ -1,6 +1,8 @@
 import os
+from datetime import datetime
 
 from asyncpg import Record
+from fastapi import Response
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
@@ -52,14 +54,14 @@ class ItemLinkController(BaseController):
             if row["link_id"]:
                 item_link = self.assemble_item_link(row)
                 output.append(item_link)
-        output.sort(key=lambda x: x.date_created, reverse=True)
+        output.sort(key=lambda x: x.date_created or datetime.min, reverse=True)
         return output
 
     def make_public_url(self, link: str) -> str:
         base = self.site_url if self.site_url else "https://localhost:9000"
         return f"{base}/#/share/item/{link}"
 
-    async def item_link_update(self, item_link_id: int, payload: ItemLink):
+    async def item_link_update(self, item_link_id: int, payload: ItemLink) -> ItemLink:
         query = (
             "UPDATE item_link SET title = $1, is_active = $2 WHERE id = $3 RETURNING *"
         )
@@ -72,7 +74,7 @@ class ItemLinkController(BaseController):
         payload.title = result["title"]
         return payload
 
-    async def item_link_delete(self, item_link_id: int):
+    async def item_link_delete(self, item_link_id: int) -> Response:
         query = "DELETE FROM item_link WHERE id = $1 RETURNING *"
         values: tuple = (item_link_id,)
         return await self.db.delete_one(query, values)

@@ -21,7 +21,7 @@ async def item_batch_upload(
     encryption_key: str,
     files: list[UploadFile] = File(...),
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> dict:
     controller = BatchUploadController(token_data, source_id)
     return await controller.s3_batch_upload(encryption_key=encryption_key, files=files)
 
@@ -31,7 +31,7 @@ async def item_search(
     source_id: int,
     payload: SearchParams,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> dict:
     controller = ItemBucketListController(token_data, source_id)
     return await controller.item_search(payload)
 
@@ -39,7 +39,7 @@ async def item_search(
 @router.get("/{item_id}")
 async def item_detail(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> ItemBucket:
     return await ItemBucketDetailController(token_data, item_id).item_detail()
 
 
@@ -48,7 +48,7 @@ async def item_update(
     item_id: int,
     payload: ItemBucket,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> ItemBucket:
     return await ItemBucketDetailController(token_data, item_id).item_update(payload)
 
 
@@ -59,7 +59,7 @@ async def item_delete(
     encryption_key: str,
     payload: ItemBucket,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> dict:
     controller = ItemBucketDeleteController(token_data=token_data, source_id=source_id)
     return await controller.delete_item(
         encryption_key=encryption_key, item_id=item_id, payload=payload
@@ -69,7 +69,7 @@ async def item_delete(
 @router.get("/{item_id}/related")
 async def get_related(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> dict:
     return await ItemBucketDetailController(token_data, item_id).get_related()
 
 
@@ -98,7 +98,7 @@ async def item_link_create(
     item_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> int:
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.item_link_create(payload)
 
@@ -106,7 +106,7 @@ async def item_link_create(
 @router.get("/{item_id}/links")
 async def item_links(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> ItemBucket:
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.get_item_links()
 
@@ -117,7 +117,7 @@ async def item_link_update(
     item_link_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> ItemLink:
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.item_link_update(item_link_id, payload)
 
@@ -127,7 +127,7 @@ async def item_link_delete(
     item_id: int,
     item_link_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> Response:
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.item_link_delete(item_link_id)
 
@@ -135,12 +135,12 @@ async def item_link_delete(
 @router.post("/{item_id}/save")
 async def save_item(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> None:
     return await ItemBucketSaveController(token_data, item_id).save_item()
 
 
 @router.delete("/{item_id}/save")
 async def delete_saved_item(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> None:
     return await ItemBucketSaveController(token_data, item_id).delete_saved_item()

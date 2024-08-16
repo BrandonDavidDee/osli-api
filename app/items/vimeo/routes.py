@@ -20,7 +20,7 @@ async def item_batch_upload(
     encryption_key: str,
     payload: ItemVimeo,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> int:
     controller = ItemVimeoCreateController(token_data, source_id)
     return await controller.item_create(encryption_key, payload)
 
@@ -30,7 +30,7 @@ async def item_vimeo_list(
     source_id: int,
     payload: SearchParams,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> dict:
     controller = ItemVimeoListController(token_data, source_id)
     return await controller.item_search(payload)
 
@@ -38,7 +38,7 @@ async def item_vimeo_list(
 @router.get("/{item_id}")
 async def item_detail(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> ItemVimeo:
     return await ItemVimeoDetailController(token_data, item_id).item_detail()
 
 
@@ -47,7 +47,7 @@ async def item_update(
     item_id: int,
     payload: ItemVimeo,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> ItemVimeo:
     return await ItemVimeoDetailController(token_data, item_id).item_update(payload)
 
 
@@ -76,7 +76,7 @@ async def item_link_create(
     item_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> int:
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.item_link_create(payload)
 
@@ -84,7 +84,7 @@ async def item_link_create(
 @router.get("/{item_id}/links")
 async def item_links(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> ItemVimeo:
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.get_item_links()
 
@@ -95,7 +95,7 @@ async def item_link_update(
     item_link_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> ItemLink:
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.item_link_update(item_link_id, payload)
 
@@ -105,7 +105,7 @@ async def item_link_delete(
     item_id: int,
     item_link_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-):
+) -> Response:
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.item_link_delete(item_link_id)
 
@@ -113,12 +113,12 @@ async def item_link_delete(
 @router.post("/{item_id}/save")
 async def save_item(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> None:
     return await ItemVimeoSaveController(token_data, item_id).save_item()
 
 
 @router.delete("/{item_id}/save")
 async def delete_saved_item(
     item_id: int, token_data: AccessTokenData = Depends(get_current_user)
-):
+) -> None:
     return await ItemVimeoSaveController(token_data, item_id).delete_saved_item()

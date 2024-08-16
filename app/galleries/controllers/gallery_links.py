@@ -120,7 +120,6 @@ class GalleryLinkController(GalleryLinkUpdateController):
                     ),
                 )
                 links.append(gallery_link)
-        # links.sort(key=lambda x: x.date_created, reverse=True)
         links.sort(key=lambda x: x.date_created or datetime.min, reverse=True)
         gallery.links = links
 

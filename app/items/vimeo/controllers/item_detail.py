@@ -15,7 +15,7 @@ class ItemVimeoDetailController(BaseController):
         super().__init__(token_data)
         self.item_id = item_id
 
-    async def item_detail(self):
+    async def item_detail(self) -> ItemVimeo:
         query = """SELECT 
         i.*,
         siv.id as saved_item_id,
@@ -35,7 +35,7 @@ class ItemVimeoDetailController(BaseController):
         WHERE i.id = $2
         """
         values: tuple = (
-            int(self.token_data.user_id),
+            self.created_by_id,
             self.item_id,
         )
         result: Record = await self.db.select_many(query, values)
@@ -68,7 +68,7 @@ class ItemVimeoDetailController(BaseController):
 
         return item
 
-    async def item_update(self, payload: ItemVimeo):
+    async def item_update(self, payload: ItemVimeo) -> ItemVimeo:
         query = "UPDATE item_vimeo SET title = $1, notes = $2 WHERE id = $3 RETURNING *"
         values: tuple = (
             payload.title,

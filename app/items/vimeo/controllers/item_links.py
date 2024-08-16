@@ -12,7 +12,7 @@ class ItemVimeoLinkController(ItemLinkController):
         super().__init__(token_data)
         self.item_id = item_id
 
-    async def item_link_create(self, payload: ItemLink):
+    async def item_link_create(self, payload: ItemLink) -> int:
         new_link = self.generate_link()
         query = """INSERT INTO item_link
         (item_vimeo_id, title, link, expiration_date, created_by_id, is_active)
@@ -23,12 +23,14 @@ class ItemVimeoLinkController(ItemLinkController):
             payload.title,
             new_link,
             payload.expiration_date,
-            int(self.token_data.user_id),
+            self.created_by_id,
             payload.is_active,
         )
-        return await self.db.insert(query, values)
+        result = await self.db.insert(query, values)
+        inserted_id: int = result["id"]
+        return inserted_id
 
-    async def get_item_links(self):
+    async def get_item_links(self) -> ItemVimeo:
         query = """SELECT 
         i.*,
         il.id as link_id,
