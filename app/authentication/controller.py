@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-from asyncpg import Record
 from fastapi import HTTPException, Request
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -100,8 +99,9 @@ class LoginController(AuthControllerBase):
         return user
 
     @staticmethod
-    def verify_password(plain_password, hashed_password) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+    def verify_password(plain_password: str, hashed_password: str) -> bool:
+        result: bool = pwd_context.verify(plain_password, hashed_password)
+        return result
 
 
 class RefreshController(AuthControllerBase):
@@ -122,13 +122,13 @@ class RefreshController(AuthControllerBase):
         headers = self.request.headers
         authorization = headers.get("authorization")
         try:
-            token = authorization.partition(" ")[2]
+            token: str = authorization.partition(" ")[2]
         except (AttributeError, IndexError):
             raise HTTPException(status_code=401)
         return token
 
     @staticmethod
-    async def validate_refresh_token(token) -> RefreshTokenData:
+    async def validate_refresh_token(token: str) -> RefreshTokenData:
         try:
             payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             return RefreshTokenData(user_id=payload["sub"])
