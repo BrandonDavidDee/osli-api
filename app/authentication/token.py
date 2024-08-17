@@ -1,9 +1,8 @@
 import os
-from typing import Annotated
+from typing import Annotated, Callable
 
 from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException, status
-from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from pydantic import ValidationError
 
@@ -26,17 +25,12 @@ def get_token_from_header(authorization: str = Header(None)) -> str:
 
 
 async def get_current_user(
-    security_scopes: SecurityScopes,
     token: Annotated[str, Depends(get_token_from_header)],
+    security_scope: str | None = None,
 ) -> AccessTokenData:
-    if security_scopes.scopes:
-        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-    else:
-        authenticate_value = "Bearer"
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -48,15 +42,35 @@ async def get_current_user(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    # skip all subsequent scope processing
+    if security_scope is None:
+        return token_data
+
     if "is_admin" in token_data.scopes:
         return token_data
 
-    for scope in security_scopes.scopes:
-        if scope not in token_scopes:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not enough permissions",
-            )
+    if security_scope not in token_scopes:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+        )
 
     return token_data
+
+
+async def get_source_id(source_id: int | None = None) -> int | None:
+    return source_id
+
+
+def get_authorized_user(permission_level: str | None = None) -> Callable:
+    async def _get_token(
+        source_id: int | None = Depends(get_source_id),
+        token: str = Depends(get_token_from_header),
+    ) -> AccessTokenData:
+        security_scope = None
+        if source_id and permission_level:
+            security_scope = f"{permission_level}:{source_id}"
+        elif permission_level:
+            security_scope = permission_level
+        return await get_current_user(token, security_scope)
+
+    return _get_token

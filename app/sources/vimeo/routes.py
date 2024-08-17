@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -30,7 +28,7 @@ async def source_update(
     source_id: int,
     passphrase: str,
     payload: SourceVimeo,
-    token_data: Annotated[AccessTokenData, Security(get_current_user, scopes=["view"])],
+    token_data: AccessTokenData = Depends(get_current_user),
 ) -> int:
     return await SourceVimeoDetailController(token_data, source_id).source_update(
         passphrase, payload
