@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -7,6 +9,20 @@ from app.me.controllers.saved_items import SavedItemsController
 from app.me.models import SavedItem
 
 router = APIRouter()
+
+
+@router.get("")
+def test_perms(
+    source_id: int,
+    token_data: Annotated[
+        AccessTokenData,
+        Security(
+            get_current_user,
+            scopes=["vimeo_source_{source_id}_item_update", "gallery_create"],
+        ),
+    ],
+) -> AccessTokenData:
+    return token_data
 
 
 @router.get("/saved-items")

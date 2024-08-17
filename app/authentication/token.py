@@ -3,6 +3,7 @@ from typing import Annotated, Callable
 
 from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException, status
+from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from pydantic import ValidationError
 
@@ -24,13 +25,38 @@ def get_token_from_header(authorization: str = Header(None)) -> str:
     return token
 
 
+async def get_source_id(source_id: int | None = None) -> int | None:
+    # FastApi will grab this if it's in the path or if it's in a query parameter
+    return source_id
+
+
+def process_dynamic_scopes(source_id: int, required_scopes: list[str]) -> list[str]:
+    output = []
+    placeholder = "{source_id}"
+
+    for scope in required_scopes:
+        if placeholder in scope:
+            # Replace the placeholder with the actual source_id
+            scope = scope.replace(placeholder, str(source_id))
+        # Add the processed scope to the output
+        output.append(scope)
+
+    return output
+
+
 async def get_current_user(
+    security_scopes: SecurityScopes,
     token: Annotated[str, Depends(get_token_from_header)],
-    security_scope: str | None = None,
+    source_id: int | None = Depends(get_source_id),
 ) -> AccessTokenData:
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
+        headers={"WWW-Authenticate": authenticate_value},
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -42,35 +68,20 @@ async def get_current_user(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    if security_scope is None:
-        return token_data
-
+    # skip all subsequent scope processing
     if "is_admin" in token_data.scopes:
         return token_data
 
-    if security_scope not in token_scopes:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not enough permissions",
-        )
+    if source_id:
+        required_scopes = process_dynamic_scopes(source_id, security_scopes.scopes)
+    else:
+        required_scopes = security_scopes
+
+    for scope in required_scopes:
+        if scope not in token_scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+            )
 
     return token_data
-
-
-async def get_source_id(source_id: int | None = None) -> int | None:
-    return source_id
-
-
-def get_authorized_user(permission_level: str | None = None) -> Callable:
-    async def _get_token(
-        source_id: int | None = Depends(get_source_id),
-        token: str = Depends(get_token_from_header),
-    ) -> AccessTokenData:
-        security_scope = None
-        if source_id and permission_level:
-            security_scope = f"{permission_level}:{source_id}"
-        elif permission_level:
-            security_scope = permission_level
-        return await get_current_user(token, security_scope)
-
-    return _get_token
