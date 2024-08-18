@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -6,11 +8,14 @@ class User(BaseModel):
     is_active: bool
     is_admin: bool = False
     username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-    scopes: list[str] = []
+    notes: str | None = None
+    scopes: list[str] = []  # the raw scope values stored in db
+    date_created: datetime | None = None
 
 
 class UserInDB(User):
     hashed_password: str
+
+
+class UserDetail(User):
+    permissions: list[str] = []  # individual permissions extrapolated from scopes
