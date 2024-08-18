@@ -1,5 +1,5 @@
 import os
-from typing import Annotated, Callable
+from typing import Annotated
 
 from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException, status
@@ -8,6 +8,7 @@ from jose import JWTError, jwt
 from pydantic import ValidationError
 
 from app.authentication.models import AccessTokenData
+from app.authentication.scopes import process_required_scopes, process_user_scopes
 
 load_dotenv()
 
@@ -28,20 +29,6 @@ def get_token_from_header(authorization: str = Header(None)) -> str:
 async def get_source_id(source_id: int | None = None) -> int | None:
     # FastApi will grab this if it's in the path or if it's in a query parameter
     return source_id
-
-
-def process_dynamic_scopes(source_id: int, required_scopes: list[str]) -> list[str]:
-    output = []
-    placeholder = "{source_id}"
-
-    for scope in required_scopes:
-        if placeholder in scope:
-            # Replace the placeholder with the actual source_id
-            scope = scope.replace(placeholder, str(source_id))
-        # Add the processed scope to the output
-        output.append(scope)
-
-    return output
 
 
 async def get_current_user(
@@ -72,13 +59,11 @@ async def get_current_user(
     if "is_admin" in token_data.scopes:
         return token_data
 
-    if source_id:
-        required_scopes = process_dynamic_scopes(source_id, security_scopes.scopes)
-    else:
-        required_scopes = security_scopes.scopes
+    user_scopes = process_user_scopes(token_scopes, source_id)
+    required_scopes = process_required_scopes(security_scopes.scopes, source_id)
 
     for scope in required_scopes:
-        if scope not in token_scopes:
+        if scope not in user_scopes:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not enough permissions",

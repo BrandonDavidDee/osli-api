@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+PLACEHOLDER = "{source_id}"
+
 
 @dataclass
 class Scope:
@@ -54,7 +56,7 @@ vimeo_item_delete = Scope(
     description="Vimeo source item delete",
 )
 
-all_scopes = [
+dynamic_scopes = [
     bucket_item_read,
     bucket_item_create,
     bucket_item_update,
@@ -118,7 +120,7 @@ group_vimeo_item_read = ScopeGroup(
     ],
 )
 
-all_groups = [
+scope_groups = [
     group_bucket_item_manage,
     group_bucket_item_update,
     group_bucket_item_read,
@@ -126,3 +128,41 @@ all_groups = [
     group_vimeo_item_update,
     group_vimeo_item_read,
 ]
+
+
+def get_dynamic_group_scopes(scope: str, source_id: int) -> list[str]:
+    output = []
+    result: ScopeGroup | None = next(
+        (group for group in scope_groups if group.name == scope), None
+    )
+    if result:
+        for group_scope in result.scopes:
+            if PLACEHOLDER in group_scope.name:
+                scope = group_scope.name.replace(PLACEHOLDER, str(source_id))
+                output.append(scope)
+    return output
+
+
+def process_user_scopes(user_scopes: list[str], source_id: int | None) -> list[str]:
+    output = []
+    for scope in user_scopes:
+        if "group_" in scope and source_id is not None:
+            group_scopes = get_dynamic_group_scopes(scope, source_id)
+            output.extend(group_scopes)
+        else:
+            output.append(scope)
+    return output
+
+
+def process_required_scopes(
+    required_scopes: list[str], source_id: int | None
+) -> list[str]:
+    if not source_id:
+        return required_scopes
+    output = []
+    for scope in required_scopes:
+        if PLACEHOLDER in scope:
+            # Replace the placeholder with the actual source_id
+            scope = scope.replace(PLACEHOLDER, str(source_id))
+        output.append(scope)
+    return output
