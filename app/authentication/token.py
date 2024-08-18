@@ -75,7 +75,7 @@ async def get_current_user(
     if source_id:
         required_scopes = process_dynamic_scopes(source_id, security_scopes.scopes)
     else:
-        required_scopes = security_scopes
+        required_scopes = security_scopes.scopes
 
     for scope in required_scopes:
         if scope not in token_scopes:
