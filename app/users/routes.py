@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def get_user_list(
+async def user_list(
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> list[User]:
     controller = UserListController(token_data)
@@ -18,8 +18,9 @@ async def get_user_list(
 
 
 @router.get("/{user_id}")
-async def get_user_detail(
-    user_id: int, token_data: AccessTokenData = Depends(get_current_user)
+async def user_detail(
+    user_id: int,
+    token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
 ) -> UserDetail:
     controller = UserDetailController(token_data, user_id)
     return await controller.get_user_detail()
