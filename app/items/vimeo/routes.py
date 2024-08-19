@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Security
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -15,11 +15,13 @@ router = APIRouter()
 
 
 @router.post("")
-async def item_batch_upload(
+async def item_vimeo_create(
     source_id: int,
     encryption_key: str,
     payload: ItemVimeo,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_create"]
+    ),
 ) -> int:
     controller = ItemVimeoCreateController(token_data, source_id)
     return await controller.item_create(encryption_key, payload)
@@ -29,7 +31,9 @@ async def item_batch_upload(
 async def item_vimeo_list(
     source_id: int,
     payload: SearchParams,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_read"]
+    ),
 ) -> dict:
     controller = ItemVimeoListController(token_data, source_id)
     return await controller.item_search(payload)
@@ -37,25 +41,37 @@ async def item_vimeo_list(
 
 @router.get("/{item_id}")
 async def item_detail(
-    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+    source_id: int,
+    item_id: int,
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_read"]
+    ),
 ) -> ItemVimeo:
-    return await ItemVimeoDetailController(token_data, item_id).item_detail()
+    return await ItemVimeoDetailController(token_data, source_id, item_id).item_detail()
 
 
 @router.put("/{item_id}")
 async def item_update(
+    source_id: int,
     item_id: int,
     payload: ItemVimeo,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_update"]
+    ),
 ) -> ItemVimeo:
-    return await ItemVimeoDetailController(token_data, item_id).item_update(payload)
+    return await ItemVimeoDetailController(token_data, source_id, item_id).item_update(
+        payload
+    )
 
 
 @router.post("/{item_id}/tags")
 async def item_tag_create(
+    source_id: int,
     item_id: int,
     payload: ItemTag,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_update"]
+    ),
 ) -> ItemTag:
     controller = ItemVimeoTagsController(token_data, item_id)
     return await controller.item_tag_create(payload)
@@ -63,9 +79,12 @@ async def item_tag_create(
 
 @router.delete("/{item_id}/tags/{tag_item_vimeo_id}")
 async def item_tag_delete(
+    source_id: int,
     item_id: int,
     tag_item_vimeo_id: int,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_update"]
+    ),
 ) -> Response:
     controller = ItemVimeoTagsController(token_data, item_id)
     return await controller.item_tag_delete(tag_item_vimeo_id)

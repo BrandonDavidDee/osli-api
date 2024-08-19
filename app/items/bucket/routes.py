@@ -42,23 +42,29 @@ async def item_search(
 
 @router.get("/{item_id}")
 async def item_detail(
+    source_id: int,
     item_id: int,
     token_data: AccessTokenData = Security(
         get_current_user, scopes=["bucket_{source_id}_item_read"]
     ),
 ) -> ItemBucket:
-    return await ItemBucketDetailController(token_data, item_id).item_detail()
+    return await ItemBucketDetailController(
+        token_data, source_id, item_id
+    ).item_detail()
 
 
 @router.put("/{item_id}")
 async def item_update(
+    source_id: int,
     item_id: int,
     payload: ItemBucket,
     token_data: AccessTokenData = Security(
         get_current_user, scopes=["bucket_{source_id}_item_update"]
     ),
 ) -> ItemBucket:
-    return await ItemBucketDetailController(token_data, item_id).item_update(payload)
+    return await ItemBucketDetailController(token_data, source_id, item_id).item_update(
+        payload
+    )
 
 
 @router.put("/{item_id}/delete")
@@ -77,16 +83,23 @@ async def item_delete(
 
 @router.get("/{item_id}/related")
 async def get_related(
-    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+    source_id: int,
+    item_id: int,
+    token_data: AccessTokenData = Depends(get_current_user),
 ) -> dict:
-    return await ItemBucketDetailController(token_data, item_id).get_related()
+    return await ItemBucketDetailController(
+        token_data, source_id, item_id
+    ).get_related()
 
 
 @router.post("/{item_id}/tags")
 async def item_tag_create(
+    source_id: int,
     item_id: int,
     payload: ItemTag,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_update"]
+    ),
 ) -> ItemTag:
     controller = ItemBucketTagController(token_data, item_id)
     return await controller.item_tag_create(payload)
@@ -94,9 +107,12 @@ async def item_tag_create(
 
 @router.delete("/{item_id}/tags/{tag_item_bucket_id}")
 async def item_tag_delete(
+    source_id: int,
     item_id: int,
     tag_item_bucket_id: int,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_update"]
+    ),
 ) -> Response:
     controller = ItemBucketTagController(token_data, item_id)
     return await controller.item_tag_delete(tag_item_bucket_id)

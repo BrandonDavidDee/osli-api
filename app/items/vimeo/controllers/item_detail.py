@@ -11,8 +11,9 @@ from app.tags.models import Tag
 
 
 class ItemVimeoDetailController(BaseController):
-    def __init__(self, token_data: AccessTokenData, item_id: int):
+    def __init__(self, token_data: AccessTokenData, source_id: int, item_id: int):
         super().__init__(token_data)
+        self.source_id = source_id
         self.item_id = item_id
 
     async def item_detail(self) -> ItemVimeo:
@@ -32,10 +33,11 @@ class ItemVimeoDetailController(BaseController):
         LEFT JOIN source_vimeo AS source ON source.id = i.source_vimeo_id
         LEFT JOIN tag_item_vimeo as j ON j.item_vimeo_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
-        WHERE i.id = $2
+        WHERE source_vimeo_id = $2 AND i.id = $3
         """
         values: tuple = (
             self.created_by_id,
+            self.source_id,
             self.item_id,
         )
         result: Record = await self.db.select_many(query, values)

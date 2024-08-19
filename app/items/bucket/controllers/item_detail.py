@@ -12,8 +12,9 @@ from app.tags.models import Tag
 
 
 class ItemBucketDetailController(BaseController):
-    def __init__(self, token_data: AccessTokenData, item_id: int):
+    def __init__(self, token_data: AccessTokenData, source_id: int, item_id: int):
         super().__init__(token_data)
+        self.source_id = source_id
         self.item_id = item_id
 
     async def item_detail(self) -> ItemBucket:
@@ -32,10 +33,11 @@ class ItemBucketDetailController(BaseController):
         LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
         LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id
         LEFT JOIN tag ON tag.id = j.tag_id
-        WHERE i.id = $2
+        WHERE i.source_bucket_id = $2 AND i.id = $3
         """
         values: tuple = (
             self.created_by_id,
+            self.source_id,
             self.item_id,
         )
         result: Record = await self.db.select_many(query, values)
