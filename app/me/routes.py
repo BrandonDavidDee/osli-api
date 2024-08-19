@@ -18,7 +18,7 @@ def test_perms(
         AccessTokenData,
         Security(
             get_current_user,
-            scopes=["vimeo_source_{source_id}_item_update", "gallery_create"],
+            scopes=["bucket_{source_id}_item_delete"],
         ),
     ],
 ) -> AccessTokenData:

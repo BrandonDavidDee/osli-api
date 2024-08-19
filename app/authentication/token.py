@@ -8,7 +8,10 @@ from jose import JWTError, jwt
 from pydantic import ValidationError
 
 from app.authentication.models import AccessTokenData
-from app.authentication.scopes import process_required_scopes, process_user_permissions
+from app.authentication.scopes import (
+    get_permissions_from_scopes,
+    process_required_scopes,
+)
 
 load_dotenv()
 
@@ -59,7 +62,7 @@ async def get_current_user(
     if "is_admin" in token_data.scopes:
         return token_data
 
-    user_permissions = process_user_permissions(token_scopes, source_id)
+    user_permissions = get_permissions_from_scopes(token_scopes, source_id)
     required_scopes = process_required_scopes(security_scopes.scopes, source_id)
 
     for scope in required_scopes:
