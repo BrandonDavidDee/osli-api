@@ -56,6 +56,7 @@ vimeo_item_delete = Permission(
     description="Vimeo source item delete",
 )
 
+
 dynamic_permissions = [
     bucket_item_read,
     bucket_item_create,
@@ -66,6 +67,19 @@ dynamic_permissions = [
     vimeo_item_update,
     vimeo_item_delete,
 ]
+
+gallery_create = Permission(
+    name="gallery_create",
+    description="Create gallery",
+)
+
+gallery_link_create = Permission(
+    name="gallery_link_create",
+    description="Create gallery link",
+)
+
+all_permissions = [gallery_create, gallery_link_create]
+all_permissions.extend(dynamic_permissions)
 
 group_bucket_item_manage = PermissionGroup(
     name="group_bucket_item_manage",
