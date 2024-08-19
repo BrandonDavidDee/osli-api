@@ -25,7 +25,7 @@ def get_token_from_header(authorization: str = Header(None)) -> str:
     try:
         token = authorization.partition(" ")[2]
     except (AttributeError, IndexError):
-        raise HTTPException(status_code=401)
+        raise HTTPException(status_code=401, detail="Error getting token from Header")
     return token
 
 
@@ -68,7 +68,7 @@ async def get_current_user(
     for scope in required_scopes:
         if scope not in user_permissions:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
             )
 

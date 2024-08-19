@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Response, Security, UploadFile
 
 from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
@@ -20,7 +20,9 @@ async def item_batch_upload(
     source_id: int,
     encryption_key: str,
     files: list[UploadFile] = File(...),
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_create"]
+    ),
 ) -> dict:
     controller = BatchUploadController(token_data, source_id)
     return await controller.s3_batch_upload(encryption_key=encryption_key, files=files)
@@ -30,7 +32,9 @@ async def item_batch_upload(
 async def item_search(
     source_id: int,
     payload: SearchParams,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_read"]
+    ),
 ) -> dict:
     controller = ItemBucketListController(token_data, source_id)
     return await controller.item_search(payload)
@@ -38,7 +42,10 @@ async def item_search(
 
 @router.get("/{item_id}")
 async def item_detail(
-    item_id: int, token_data: AccessTokenData = Depends(get_current_user)
+    item_id: int,
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_read"]
+    ),
 ) -> ItemBucket:
     return await ItemBucketDetailController(token_data, item_id).item_detail()
 
@@ -47,7 +54,9 @@ async def item_detail(
 async def item_update(
     item_id: int,
     payload: ItemBucket,
-    token_data: AccessTokenData = Depends(get_current_user),
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_update"]
+    ),
 ) -> ItemBucket:
     return await ItemBucketDetailController(token_data, item_id).item_update(payload)
 

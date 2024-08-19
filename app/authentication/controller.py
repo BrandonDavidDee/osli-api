@@ -129,7 +129,9 @@ class RefreshController(AuthControllerBase):
         try:
             token: str = authorization.partition(" ")[2]
         except (AttributeError, IndexError):
-            raise HTTPException(status_code=401)
+            raise HTTPException(
+                status_code=401, detail="Error getting token from Header"
+            )
         return token
 
     @staticmethod
@@ -138,4 +140,6 @@ class RefreshController(AuthControllerBase):
             payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             return RefreshTokenData(user_id=payload["sub"])
         except (JWTError, ValidationError, KeyError):
-            raise HTTPException(status_code=401)
+            raise HTTPException(
+                status_code=401, detail="Error validating refresh token"
+            )

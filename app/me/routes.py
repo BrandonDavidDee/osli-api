@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, Security
 
 from app.authentication.models import AccessTokenData
@@ -14,13 +12,9 @@ router = APIRouter()
 @router.get("")
 def test_perms(
     source_id: int,
-    token_data: Annotated[
-        AccessTokenData,
-        Security(
-            get_current_user,
-            scopes=["bucket_{source_id}_item_delete"],
-        ),
-    ],
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["bucket_{source_id}_item_delete"]
+    ),
 ) -> AccessTokenData:
     return token_data
 
