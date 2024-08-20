@@ -8,7 +8,7 @@ from app.galleries.controllers.gallery_links import (
     GalleryLinkUpdateController,
 )
 from app.galleries.controllers.gallery_list import GalleryListController
-from app.galleries.models import Gallery, GalleryItemCreate, GalleryLink
+from app.galleries.models import Gallery, GalleryItem, GalleryLink
 
 router = APIRouter()
 
@@ -50,9 +50,9 @@ async def gallery_update(
 @router.post("/{gallery_id}/items")
 async def gallery_item_create(
     gallery_id: int,
-    payload: GalleryItemCreate,
+    payload: GalleryItem,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> int:
+) -> GalleryItem:
     controller = GalleryDetailController(token_data, gallery_id)
     return await controller.gallery_item_create(payload)
 

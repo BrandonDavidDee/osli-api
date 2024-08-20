@@ -19,12 +19,6 @@ class GalleryItem(BaseModel):
     date_created: datetime | None = None
 
 
-class GalleryItemCreate(BaseModel):
-    item_order: int = 0
-    item_id: int
-    source_type: SourceType | None = None
-
-
 class GalleryLink(BaseModel):
     id: int | None = None
     title: str | None = None

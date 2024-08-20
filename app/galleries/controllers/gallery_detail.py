@@ -5,7 +5,7 @@ from fastapi import HTTPException, Response
 
 from app.authentication.models import AccessTokenData
 from app.controller import BaseController
-from app.galleries.models import Gallery, GalleryItem, GalleryItemCreate
+from app.galleries.models import Gallery, GalleryItem
 from app.items.bucket.models import ItemBucket
 from app.items.vimeo.models import ItemVimeo
 from app.sources.bucket.models import SourceBucket
@@ -173,7 +173,7 @@ class GalleryDetailController(BaseController):
             raise HTTPException(status_code=404)
         return self.assembly_stub.assemble_gallery(result=result)
 
-    async def gallery_item_create(self, payload: GalleryItemCreate) -> int:
+    async def gallery_item_create(self, payload: GalleryItem) -> GalleryItem:
         query = """INSERT INTO gallery_item
         (gallery_id, 
         item_bucket_id, 
@@ -183,19 +183,19 @@ class GalleryDetailController(BaseController):
         VALUES ($1, $2, $3, $4, $5) 
         RETURNING *"""
         created_by_id = self.created_by_id
-        if payload.source_type == SourceType.BUCKET:
+        if payload.source_type == SourceType.BUCKET and payload.item_bucket is not None:
             values: tuple = (
                 self.gallery_id,
-                payload.item_id,
+                payload.item_bucket.id,
                 None,
                 payload.item_order,
                 created_by_id,
             )
-        elif payload.source_type == SourceType.VIMEO:
+        elif payload.source_type == SourceType.VIMEO and payload.item_vimeo is not None:
             values = (
                 self.gallery_id,
                 None,
-                payload.item_id,
+                payload.item_vimeo.id,
                 payload.item_order,
                 created_by_id,
             )
@@ -203,7 +203,8 @@ class GalleryDetailController(BaseController):
             raise HTTPException(status_code=500, detail="Unknown Source Type")
         result: Record = await self.db.insert(query, values)
         inserted_item_id: int = result["id"]
-        return inserted_item_id
+        payload.id = inserted_item_id
+        return payload
 
     async def gallery_item_delete(self, gallery_item_id: int) -> Response:
         query = "DELETE FROM gallery_item WHERE id = $1"
