@@ -13,6 +13,7 @@ class Permission:
 @dataclass
 class PermissionGroup:
     name: str
+    label: str
     description: str | None
     permissions: list[Permission]
 
@@ -84,6 +85,7 @@ all_permissions.extend(dynamic_permissions)
 
 group_bucket_item_manage = PermissionGroup(
     name="group_bucket_item_manage",
+    label="Bucket Item Manage",
     description="Manage all bucket items across all source ids.",
     permissions=[
         bucket_item_read,
@@ -95,6 +97,7 @@ group_bucket_item_manage = PermissionGroup(
 
 group_bucket_item_update = PermissionGroup(
     name="group_bucket_item_update",
+    label="Bucket Item Update",
     description="Create and update bucket items across all source ids. Cannot delete.",
     permissions=[
         bucket_item_read,
@@ -105,7 +108,8 @@ group_bucket_item_update = PermissionGroup(
 
 group_bucket_item_read = PermissionGroup(
     name="group_bucket_item_read",
-    description="Read bucket items across all source ids.",
+    label="Bucket Item Read Only",
+    description="View bucket items across all source ids.",
     permissions=[
         bucket_item_read,
     ],
@@ -113,6 +117,7 @@ group_bucket_item_read = PermissionGroup(
 
 group_vimeo_item_manage = PermissionGroup(
     name="group_vimeo_item_manage",
+    label="Vimeo Item Manage",
     description="Manage All vimeo items across all source ids",
     permissions=[
         vimeo_item_read,
@@ -124,6 +129,7 @@ group_vimeo_item_manage = PermissionGroup(
 
 group_vimeo_item_update = PermissionGroup(
     name="group_vimeo_item_update",
+    label="Vimeo Item Update",
     description="Create and update vimeo items. across all source ids. Cannot delete.",
     permissions=[
         vimeo_item_read,
@@ -134,7 +140,8 @@ group_vimeo_item_update = PermissionGroup(
 
 group_vimeo_item_read = PermissionGroup(
     name="group_vimeo_item_read",
-    description="Read vimeo items across all source ids",
+    label="Vimeo Item Read Only",
+    description="View vimeo items across all source ids",
     permissions=[
         vimeo_item_read,
     ],

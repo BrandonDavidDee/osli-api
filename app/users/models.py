@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.authentication.permissions import Permission
+from app.authentication.permissions import Permission, PermissionGroup
 
 
 class User(BaseModel):
@@ -20,6 +20,5 @@ class UserInDB(User):
 
 
 class UserDetail(User):
-    permissions: list[
-        Permission
-    ] = []  # individual permissions extrapolated from scopes
+    permissions: list[Permission] = []
+    permission_groups: list[PermissionGroup] = []

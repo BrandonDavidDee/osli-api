@@ -33,26 +33,25 @@ class UserDetailController(BaseController):
             return None
         return permission
 
-    def get_user_permissions(self, user_scopes: list[str]) -> list[Permission]:
+    def get_user_permissions(self, user_scopes: list[str]) -> dict:
         """Dynamic scopes, regular permissions and permission groups
         are all together in user[scopes] and use string patterns and list groupings to
         determine which is which.
         """
-        output = []
+        permissions = []
+        permission_groups = []
         for scope in user_scopes:
             found_group = find_permission_group(scope)
             has_source_id = self.parse_dynamic_scope(scope)
             found_permission = find_permission(scope)
             if found_group:
-                for permission in found_group.permissions:
-                    output.append(permission)
+                permission_groups.append(found_group)
             elif has_source_id:
                 # this is a scope set explicitly for a particular source_id
-                output.append(has_source_id)
+                permissions.append(has_source_id)
             elif found_permission:
-                output.append(found_permission)
-
-        return output
+                permissions.append(found_permission)
+        return {"permissions": permissions, "permission_groups": permission_groups}
 
     async def get_user_detail(self) -> UserDetail:
         row: Record = await self.db.select_one(
@@ -69,5 +68,7 @@ class UserDetailController(BaseController):
             date_created=row["date_created"],
         )
         user.scopes = row["scopes"].split(",") if row["scopes"] else []
-        user.permissions = self.get_user_permissions(user.scopes)
+        permissions: dict = self.get_user_permissions(user.scopes)
+        user.permissions = permissions["permissions"]
+        user.permission_groups = permissions["permission_groups"]
         return user
