@@ -62,7 +62,7 @@ async def gallery_item_delete(
     gallery_id: int,
     gallery_item_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> Response:
+) -> int:
     controller = GalleryDetailController(token_data, gallery_id)
     return await controller.gallery_item_delete(gallery_item_id)
 
@@ -72,7 +72,7 @@ async def gallery_link_create(
     gallery_id: int,
     payload: GalleryLink,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> int:
+) -> GalleryLink:
     controller = GalleryLinkController(token_data, gallery_id)
     return await controller.gallery_link_create(payload)
 

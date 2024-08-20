@@ -206,6 +206,7 @@ class GalleryDetailController(BaseController):
         payload.id = inserted_item_id
         return payload
 
-    async def gallery_item_delete(self, gallery_item_id: int) -> Response:
+    async def gallery_item_delete(self, gallery_item_id: int) -> int:
         query = "DELETE FROM gallery_item WHERE id = $1"
-        return await self.db.delete_one(query, gallery_item_id)
+        await self.db.delete_one(query, gallery_item_id)
+        return gallery_item_id

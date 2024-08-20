@@ -42,7 +42,7 @@ class GalleryLinkController(GalleryLinkUpdateController):
         super().__init__(token_data)
         self.gallery_id = gallery_id
 
-    async def gallery_link_create(self, payload: GalleryLink) -> int:
+    async def gallery_link_create(self, payload: GalleryLink) -> GalleryLink:
         new_link = self.generate_link()
         query = """INSERT INTO gallery_link
         (gallery_id, title, link, is_active, expiration_date, created_by_id)
@@ -57,8 +57,9 @@ class GalleryLinkController(GalleryLinkUpdateController):
             self.created_by_id,
         )
         result = await self.db.insert(query, values)
-        inserted_id: int = result["id"]
-        return inserted_id
+        payload.date_created = result["date_created"]
+        payload.id = result["id"]
+        return payload
 
     async def get_gallery_links(self) -> Gallery:
         query = """SELECT 
