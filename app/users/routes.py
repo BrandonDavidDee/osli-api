@@ -4,7 +4,7 @@ from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.users.controllers.user_detail import UserDetailController
 from app.users.controllers.user_list import UserListController
-from app.users.models import User, UserDetail
+from app.users.models import User
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ async def user_list(
 async def user_detail(
     user_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> UserDetail:
+) -> User:
     controller = UserDetailController(token_data, user_id)
     return await controller.get_user_detail()
 
@@ -29,8 +29,8 @@ async def user_detail(
 @router.put("/{user_id}/scopes")
 async def update_user_scopes(
     user_id: int,
-    payload: UserDetail,
+    payload: User,
     token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
-) -> UserDetail:
+) -> User:
     controller = UserDetailController(token_data, user_id)
     return await controller.update_user_scopes(payload)

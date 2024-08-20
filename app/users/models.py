@@ -12,13 +12,10 @@ class User(BaseModel):
     username: str
     notes: str | None = None
     scopes: list[str] = []  # the raw scope values stored in db
+    permissions: list[Permission] = []
+    permission_groups: list[PermissionGroup] = []
     date_created: datetime | None = None
 
 
 class UserInDB(User):
     hashed_password: str
-
-
-class UserDetail(User):
-    permissions: list[Permission] = []
-    permission_groups: list[PermissionGroup] = []

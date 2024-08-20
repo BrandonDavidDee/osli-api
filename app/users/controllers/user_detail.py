@@ -4,10 +4,10 @@ from asyncpg import Record
 from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
-from app.authentication.permissions import Permission, PermissionGroup
+from app.authentication.permissions import Permission
 from app.authentication.scopes import find_permission, find_permission_group
 from app.controller import BaseController
-from app.users.models import UserDetail
+from app.users.models import User
 
 
 class UserDetailController(BaseController):
@@ -53,13 +53,13 @@ class UserDetailController(BaseController):
                 permissions.append(found_permission)
         return {"permissions": permissions, "permission_groups": permission_groups}
 
-    async def get_user_detail(self) -> UserDetail:
+    async def get_user_detail(self) -> User:
         row: Record = await self.db.select_one(
             "SELECT * FROM auth_user WHERE id = $1", self.user_id
         )
         if not row:
             raise HTTPException(status_code=404)
-        user = UserDetail(
+        user = User(
             id=row["id"],
             is_active=row["is_active"],
             is_admin=row["is_admin"],
@@ -73,7 +73,7 @@ class UserDetailController(BaseController):
         user.permission_groups = permissions["permission_groups"]
         return user
 
-    async def update_user_scopes(self, payload: UserDetail) -> UserDetail:
+    async def update_user_scopes(self, payload: User) -> User:
         if not payload.scopes:
             scope_value: str | None = None
         else:
