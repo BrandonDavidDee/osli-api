@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.users.models import User
+
 
 class LoginBody(BaseModel):
     username: str
@@ -9,7 +11,7 @@ class LoginBody(BaseModel):
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str
+    user: User
 
 
 class RefreshTokenData(BaseModel):

@@ -13,7 +13,7 @@ from app.authentication.token import (
     SECRET_KEY,
 )
 from app.db import db
-from app.users.models import UserInDB
+from app.users.models import User, UserInDB
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -66,8 +66,11 @@ class AuthControllerBase:
             data={"sub": str(user.id)},
             expires_on=refresh_expires_on,
         )
+        output_user = User(**user.model_dump(exclude={"hashed_password"}))
         return TokenPair(
-            access_token=access_token, refresh_token=refresh_token, token_type="bearer"
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=output_user,
         )
 
     @staticmethod
