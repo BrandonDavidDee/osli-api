@@ -4,7 +4,7 @@ from asyncpg import Record
 from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
-from app.authentication.permissions import Permission
+from app.authentication.permissions import Permission, PermissionGroup
 from app.authentication.scopes import find_permission, find_permission_group
 from app.controller import BaseController
 from app.users.models import UserDetail
@@ -72,3 +72,24 @@ class UserDetailController(BaseController):
         user.permissions = permissions["permissions"]
         user.permission_groups = permissions["permission_groups"]
         return user
+
+    async def update_user_scopes(self, payload: UserDetail):
+        if not payload.scopes:
+            scope_value: str | None = None
+        else:
+            scope_value = ",".join(payload.scopes)
+        query = "UPDATE auth_user SET scopes = $1 WHERE id = $2 RETURNING scopes"
+        values: tuple = (
+            scope_value,
+            self.user_id,
+        )
+        result: Record = await self.db.insert(query, values)
+        if result["scopes"]:
+            updated_scopes = result["scopes"].split(",")
+            permissions: dict = self.get_user_permissions(updated_scopes)
+            payload.permissions = permissions["permissions"]
+            payload.permission_groups = permissions["permission_groups"]
+        else:
+            payload.permissions = []
+            payload.permission_groups = []
+        return payload

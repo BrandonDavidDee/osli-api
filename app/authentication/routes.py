@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter, Depends, Request
 
 from app.authentication.controller import LoginController, RefreshController
 from app.authentication.models import AccessTokenData, LoginBody, TokenPair
@@ -25,13 +25,13 @@ async def refresh_tokens(request: Request) -> TokenPair:
 
 @router.get("/permissions")
 def get_permissions(
-    token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
+    token_data: AccessTokenData = Depends(get_current_user),
 ) -> list[Permission]:
     return all_permissions
 
 
 @router.get("/permission-groups")
 def get_permission_groups(
-    token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
+    token_data: AccessTokenData = Depends(get_current_user),
 ) -> list[PermissionGroup]:
     return permission_groups

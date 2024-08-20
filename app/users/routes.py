@@ -20,7 +20,17 @@ async def user_list(
 @router.get("/{user_id}")
 async def user_detail(
     user_id: int,
-    token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
+    token_data: AccessTokenData = Depends(get_current_user),
 ) -> UserDetail:
     controller = UserDetailController(token_data, user_id)
     return await controller.get_user_detail()
+
+
+@router.put("/{user_id}/scopes")
+async def update_user_scopes(
+    user_id: int,
+    payload: UserDetail,
+    token_data: AccessTokenData = Security(get_current_user, scopes=["is_admin"]),
+) -> UserDetail:
+    controller = UserDetailController(token_data, user_id)
+    return await controller.update_user_scopes(payload)
