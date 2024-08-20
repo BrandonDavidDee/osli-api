@@ -73,7 +73,7 @@ class UserDetailController(BaseController):
         user.permission_groups = permissions["permission_groups"]
         return user
 
-    async def update_user_scopes(self, payload: UserDetail):
+    async def update_user_scopes(self, payload: UserDetail) -> UserDetail:
         if not payload.scopes:
             scope_value: str | None = None
         else:

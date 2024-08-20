@@ -64,6 +64,21 @@ async def item_update(
     )
 
 
+@router.put("/{item_id}/vimeo-meta")
+async def item_update_vimeo_meta(
+    encryption_key: str,
+    source_id: int,
+    item_id: int,
+    payload: ItemVimeo,
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_update"]
+    ),
+) -> ItemVimeo:
+    return await ItemVimeoDetailController(
+        token_data, source_id, item_id
+    ).item_update_vimeo_meta(encryption_key, payload)
+
+
 @router.post("/{item_id}/tags")
 async def item_tag_create(
     source_id: int,

@@ -10,7 +10,9 @@ class UserListController(BaseController):
         super().__init__(token_data)
 
     async def get_list(self) -> list[User]:
-        result: list[Record] = await self.db.select_many("SELECT * FROM auth_user")
+        result: list[Record] = await self.db.select_many(
+            "SELECT * FROM auth_user ORDER BY username"
+        )
         output = []
         for row in result:
             user = User(

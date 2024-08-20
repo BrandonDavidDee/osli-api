@@ -2,17 +2,17 @@ from asyncpg import Record
 from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
-from app.controller import BaseController
 from app.items.models import ItemTag
 from app.items.vimeo.models import ItemVimeo
 from app.sources.models import SourceType
+from app.sources.vimeo.controllers.vimeo_api import VimeoApiController
 from app.sources.vimeo.models import SourceVimeo
 from app.tags.models import Tag
 
 
-class ItemVimeoDetailController(BaseController):
+class ItemVimeoDetailController(VimeoApiController):
     def __init__(self, token_data: AccessTokenData, source_id: int, item_id: int):
-        super().__init__(token_data)
+        super().__init__(token_data, source_id)
         self.source_id = source_id
         self.item_id = item_id
 
@@ -78,4 +78,21 @@ class ItemVimeoDetailController(BaseController):
             self.item_id,
         )
         await self.db.insert(query, values)
+        return payload
+
+    async def item_update_vimeo_meta(
+        self, encryption_key: str, payload: ItemVimeo
+    ) -> ItemVimeo:
+        meta: dict = await self.get_thumbnails(encryption_key, payload.video_id)
+        query = "UPDATE item_vimeo SET thumbnail = $1, height = $2, width = $3 WHERE id = $4 RETURNING *"
+        values: tuple = (
+            meta["thumbnail"],
+            meta["height"],
+            meta["width"],
+            self.item_id,
+        )
+        result: Record = await self.db.insert(query, values)
+        payload.thumbnail = result["thumbnail"]
+        payload.height = meta["height"]
+        payload.width = meta["width"]
         return payload
