@@ -12,11 +12,11 @@ class ItemBucketLinkController(ItemLinkController):
         super().__init__(token_data)
         self.item_id = item_id
 
-    async def item_link_create(self, payload: ItemLink) -> int:
+    async def item_link_create(self, payload: ItemLink) -> ItemLink:
         new_link = self.generate_link()
         query = """INSERT INTO item_link
         (item_bucket_id, title, link, expiration_date, created_by_id, is_active)
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
+        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
         """
         values: tuple = (
             self.item_id,
@@ -27,8 +27,9 @@ class ItemBucketLinkController(ItemLinkController):
             payload.is_active,
         )
         result = await self.db.insert(query, values)
-        inserted_id: int = result["id"]
-        return inserted_id
+        payload.id = result["id"]
+        payload.date_created = result["date_created"]
+        return payload
 
     async def get_item_links(self) -> ItemBucket:
         query = """SELECT 

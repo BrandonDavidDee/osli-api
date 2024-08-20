@@ -123,7 +123,7 @@ async def item_link_create(
     item_id: int,
     payload: ItemLink,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> int:
+) -> ItemLink:
     controller = ItemBucketLinkController(token_data, item_id)
     return await controller.item_link_create(payload)
 
