@@ -1,3 +1,4 @@
+import copy
 import re
 
 from asyncpg import Record
@@ -28,10 +29,9 @@ class UserDetailController(BaseController):
         permission = find_permission(permission_name)
         if not permission:
             return None
-        permission.source_id = int(source_id)
-        if not permission:
-            return None
-        return permission
+        copied = copy.deepcopy(permission)
+        copied.source_id = int(source_id)
+        return copied
 
     def get_user_permissions(self, user_scopes: list[str]) -> dict:
         """Dynamic scopes, regular permissions and permission groups
