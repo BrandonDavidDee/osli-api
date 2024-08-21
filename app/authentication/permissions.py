@@ -20,42 +20,42 @@ class PermissionGroup:
 
 bucket_item_read = Permission(
     name="bucket_{source_id}_item_read",
-    description="Bucket source item read",
+    description="Bucket Source Item View",
 )
 
 bucket_item_create = Permission(
     name="bucket_{source_id}_item_create",
-    description="Bucket source item create",
+    description="Bucket Source Item Create",
 )
 
 bucket_item_update = Permission(
     name="bucket_{source_id}_item_update",
-    description="Bucket source item update",
+    description="Bucket Source Item Update",
 )
 
 bucket_item_delete = Permission(
     name="bucket_{source_id}_item_delete",
-    description="Bucket source item delete",
+    description="Bucket Source Item Delete",
 )
 
 vimeo_item_read = Permission(
     name="vimeo_{source_id}_item_read",
-    description="Vimeo source item read",
+    description="Vimeo Source Item View",
 )
 
 vimeo_item_create = Permission(
     name="vimeo_{source_id}_item_create",
-    description="Vimeo source item create",
+    description="Vimeo Source Item Create",
 )
 
 vimeo_item_update = Permission(
     name="vimeo_{source_id}_item_update",
-    description="Vimeo source item update",
+    description="Vimeo Source Item Update",
 )
 
 vimeo_item_delete = Permission(
     name="vimeo_{source_id}_item_delete",
-    description="Vimeo source item delete",
+    description="Vimeo Source Item Delete",
 )
 
 
@@ -73,17 +73,22 @@ dynamic_vimeo_permissions = [
     vimeo_item_delete,
 ]
 
+item_link_create = Permission(
+    name="item_link_create",
+    description="Create Item Link",
+)
+
 gallery_create = Permission(
     name="gallery_create",
-    description="Create gallery",
+    description="Create Gallery",
 )
 
 gallery_link_create = Permission(
     name="gallery_link_create",
-    description="Create gallery link",
+    description="Create Gallery Link",
 )
 
-miscellaneous_permissions = [gallery_create, gallery_link_create]
+miscellaneous_permissions = [item_link_create, gallery_create, gallery_link_create]
 
 all_permissions = []
 
