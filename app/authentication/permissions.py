@@ -58,7 +58,6 @@ vimeo_item_delete = Permission(
     description="Vimeo Source Item Delete",
 )
 
-
 dynamic_bucket_permissions = [
     bucket_item_read,
     bucket_item_create,
@@ -73,14 +72,29 @@ dynamic_vimeo_permissions = [
     vimeo_item_delete,
 ]
 
-item_link_create = Permission(
-    name="item_link_create",
-    description="Create Item Link",
+gallery_read = Permission(
+    name="gallery_read",
+    description="View Galleries",
 )
 
 gallery_create = Permission(
     name="gallery_create",
-    description="Create Gallery",
+    description="Create Galleries",
+)
+
+gallery_update = Permission(
+    name="gallery_update",
+    description="Update Galleries",
+)
+
+gallery_delete = Permission(
+    name="gallery_delete",
+    description="Delete Galleries",
+)
+
+item_link_create = Permission(
+    name="item_link_create",
+    description="Create Item Link",
 )
 
 gallery_link_create = Permission(
@@ -88,7 +102,14 @@ gallery_link_create = Permission(
     description="Create Gallery Link",
 )
 
-miscellaneous_permissions = [item_link_create, gallery_create, gallery_link_create]
+miscellaneous_permissions = [
+    gallery_read,
+    gallery_create,
+    gallery_update,
+    gallery_delete,
+    item_link_create,
+    gallery_link_create,
+]
 
 all_permissions = []
 
@@ -160,6 +181,29 @@ group_vimeo_item_read = PermissionGroup(
     ],
 )
 
+group_gallery_manage = PermissionGroup(
+    name="group_gallery_manage",
+    label="Gallery Manage",
+    description="Manage Galleries",
+    permissions=[
+        gallery_read,
+        gallery_create,
+        gallery_update,
+        gallery_delete,
+    ],
+)
+
+group_gallery_update = PermissionGroup(
+    name="group_gallery_update",
+    label="Gallery Update",
+    description="Create and update galleries. Cannot delete.",
+    permissions=[
+        gallery_read,
+        gallery_create,
+        gallery_update,
+    ],
+)
+
 permission_groups = [
     group_bucket_item_manage,
     group_bucket_item_update,
@@ -167,4 +211,6 @@ permission_groups = [
     group_vimeo_item_manage,
     group_vimeo_item_update,
     group_vimeo_item_read,
+    group_gallery_manage,
+    group_gallery_update,
 ]
