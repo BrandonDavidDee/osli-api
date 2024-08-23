@@ -4,7 +4,7 @@ from typing import Any, AsyncGenerator
 
 from asyncpg import Connection, Record, UniqueViolationError, create_pool
 from fastapi import HTTPException, Response
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 

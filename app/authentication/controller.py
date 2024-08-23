@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from fastapi import HTTPException, Request
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import ValidationError
 
 from app.authentication.models import LoginBody, RefreshTokenData, TokenPair
@@ -14,8 +14,6 @@ from app.authentication.token import (
 )
 from app.db import db
 from app.users.models import User, UserInDB
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthControllerBase:
@@ -107,8 +105,13 @@ class LoginController(AuthControllerBase):
         return user
 
     @staticmethod
+    def get_password_hash(password: str) -> str:
+        result: str = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        return result
+
+    @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        result: bool = pwd_context.verify(plain_password, hashed_password)
+        result: bool = bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
         return result
 
 
