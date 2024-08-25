@@ -1,4 +1,5 @@
 # type: ignore
+import os
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -12,9 +13,11 @@ def client():
 
 @pytest.fixture(scope="session")
 def auth_headers(client):
+    username = os.getenv("TEST_AUTH_USERNAME")
+    password = os.getenv("TEST_AUTH_PASSWORD")
     response = client.post(
         "/api/authentication/login",
-        json={"username": "", "password": ""}
+        json={"username": username, "password": password}
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
