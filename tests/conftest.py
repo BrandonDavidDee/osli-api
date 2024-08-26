@@ -1,8 +1,19 @@
-# type: ignore
-import os
+# # type: ignore
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.db import db
+from app.authentication.token import get_current_user
+from app.authentication.models import AccessTokenData
+from unittest.mock import patch, AsyncMock
+
+
+def get_fake_auth_user():
+    fake_user = AccessTokenData(user_id="1")
+    return fake_user
+
+
+app.dependency_overrides[get_current_user] = get_fake_auth_user
 
 
 @pytest.fixture(scope="session")
@@ -11,19 +22,7 @@ def client():
         yield client
 
 
-@pytest.fixture(scope="session")
-def auth_headers(client):
-    username = os.getenv("TEST_AUTH_USERNAME")
-    password = os.getenv("TEST_AUTH_PASSWORD")
-    response = client.post(
-        "/api/authentication/login",
-        json={"username": username, "password": password}
-    )
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
-
-
-@pytest.fixture(scope="function")
-def authenticated_client(client, auth_headers):
-    client.headers.update(auth_headers)
-    return client
+@pytest.fixture
+def db_select_many():
+    with patch.object(db, 'select_many', new_callable=AsyncMock) as mock_select_many:
+        yield mock_select_many
