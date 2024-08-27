@@ -75,3 +75,23 @@ class TestRefreshToken:
         headers = {"Authorization": "Bearer " + refresh_token}
         response = client.post("/api/authentication/refresh-tokens", headers=headers)
         assert response.status_code == 200
+
+    def test_refresh_token_not_present(self, client, mock_get_user_in_db):
+        headers = {"Authorization": "Bearer "}
+        response = client.post("/api/authentication/refresh-tokens", headers=headers)
+        assert response.status_code == 401
+        response = client.post("/api/authentication/refresh-tokens")
+        assert response.status_code == 401
+
+
+class TestPermissions:
+    def test_get_permissions(self, client):
+        response = client.get("/api/authentication/permissions")
+        assert response.status_code == 200
+        assert isinstance(response.json(), dict)
+
+    def test_get_permission_groups(self, client):
+        response = client.get("/api/authentication/permission-groups")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
