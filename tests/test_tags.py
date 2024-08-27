@@ -1,6 +1,3 @@
-# type: ignore
-
-
 def test_tags_with_live_db(client):
     response = client.get("/api/tags")
     assert response.status_code == 200

@@ -1,4 +1,3 @@
-# type: ignore
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -7,13 +6,7 @@ from app.authentication.token import get_current_user
 from app.authentication.models import AccessTokenData
 from unittest.mock import patch, AsyncMock
 
-
-def get_fake_auth_user():
-    fake_user = AccessTokenData(user_id="1")
-    return fake_user
-
-
-app.dependency_overrides[get_current_user] = get_fake_auth_user
+app.dependency_overrides[get_current_user] = lambda: AccessTokenData(user_id="1")
 
 
 @pytest.fixture(scope="session")

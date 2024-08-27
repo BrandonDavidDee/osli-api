@@ -1,8 +1,6 @@
-# type: ignore
 import pytest
 from unittest.mock import patch, AsyncMock
 from app.authentication.controller import AuthControllerBase
-# from app.authentication.models import LoginBody, RefreshTokenData, TokenPair
 from app.users.models import UserInDB, User
 
 HASHED_PASSWORD = "$2b$12$OjH9jIdb5qpptt/GiWWk0O/hHRmVcopmiciccbPePjBTbhaJLG5Gm"
@@ -32,10 +30,11 @@ def mock_create_token_pair():
 class TestLogin:
     def test_login_active_user(self, client, mock_get_user_in_db, mock_create_token_pair):
         mock_get_user_in_db.return_value = USER
+        output_user = USER.model_dump(exclude={"hashed_password"})
         mock_create_token_pair.return_value = {
             "access_token": "<AccessToken>",
             "refresh_token": "<RefreshToken>",
-            "user": USER.model_dump(exclude={"hashed_password"}),
+            "user": output_user,
         }
         payload = {"username": "", "password": PLAIN_PASSWORD}
         response = client.post("/api/authentication/login", json=payload)
@@ -43,7 +42,7 @@ class TestLogin:
         assert response.json() == {
             "access_token": "<AccessToken>",
             "refresh_token": "<RefreshToken>",
-            "user": USER.model_dump(exclude={"hashed_password"}),
+            "user": output_user,
         }
 
     def test_login_incorrect_password(self, client, mock_get_user_in_db):
@@ -62,9 +61,7 @@ class TestLogin:
 
 class TestRefreshToken:
     @staticmethod
-    def get_access_token(client, mock_get_user_in_db):
-        USER.is_active = True
-        mock_get_user_in_db.return_value = USER
+    def get_access_token(client):
         payload = {"username": "", "password": PLAIN_PASSWORD}
         response = client.post("/api/authentication/login", json=payload)
         data = response.json()
@@ -72,8 +69,9 @@ class TestRefreshToken:
         return refresh_token
 
     def test_refresh_token(self, client, mock_get_user_in_db):
-        refresh_token = self.get_access_token(client, mock_get_user_in_db)
+        USER.is_active = True
+        mock_get_user_in_db.return_value = USER
+        refresh_token = self.get_access_token(client)
         headers = {"Authorization": "Bearer " + refresh_token}
         response = client.post("/api/authentication/refresh-tokens", headers=headers)
         assert response.status_code == 200
-

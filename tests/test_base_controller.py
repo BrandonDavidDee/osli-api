@@ -1,4 +1,3 @@
-# type: ignore
 import pytest
 import string
 from app.controller import BaseController

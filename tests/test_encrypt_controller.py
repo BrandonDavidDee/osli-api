@@ -1,4 +1,3 @@
-# type: ignore
 import pytest
 from app.controller import KeyEncryptionController
 import base64

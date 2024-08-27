@@ -1,4 +1,3 @@
-# type: ignore
 import pytest
 from io import BytesIO
 from unittest.mock import patch, AsyncMock
