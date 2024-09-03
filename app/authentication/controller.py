@@ -132,6 +132,8 @@ class RefreshController(AuthControllerBase):
     def get_token_from_header(self) -> str:
         headers = self.request.headers
         authorization = headers.get("authorization")
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Missing Authorization Header")
         try:
             token: str = authorization.partition(" ")[2]
         except (AttributeError, IndexError):

@@ -1,5 +1,6 @@
 import mimetypes
 import os
+from typing import Optional
 
 from asyncpg import Record
 from botocore.exceptions import ClientError
@@ -26,11 +27,14 @@ class BatchUploadController(S3ApiController):
             file_size = len(contents)
             safe_filename = self.make_safe_filename(file.filename)
             key = f"{KEY_PREFIX}/{safe_filename}"
+            filename: Optional[str] = file.filename
 
-            # TODO: mimetype guess duplicated in base controller
-            content_type, _ = mimetypes.guess_type(file.filename)
-            if not content_type:
+            if filename is None:
                 content_type = "application/octet-stream"
+            else:
+                content_type = (
+                    mimetypes.guess_type(filename)[0] or "application/octet-stream"
+                )
 
             query = """INSERT INTO item_bucket
             (source_bucket_id, mime_type, file_path, file_size, created_by_id)
