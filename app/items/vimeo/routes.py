@@ -4,6 +4,7 @@ from app.authentication.models import AccessTokenData
 from app.authentication.token import get_current_user
 from app.items.models import ItemLink, ItemTag, SearchParams
 from app.items.vimeo.controllers.item_create import ItemVimeoCreateController
+from app.items.vimeo.controllers.item_delete import ItemVimeoDeleteController
 from app.items.vimeo.controllers.item_detail import ItemVimeoDetailController
 from app.items.vimeo.controllers.item_links import ItemVimeoLinkController
 from app.items.vimeo.controllers.item_list import ItemVimeoListController
@@ -64,6 +65,18 @@ async def item_update(
     )
 
 
+@router.delete("/{item_id}")
+async def item_delete(
+    source_id: int,
+    item_id: int,
+    token_data: AccessTokenData = Security(
+        get_current_user, scopes=["vimeo_{source_id}_item_delete"]
+    ),
+) -> int:
+    controller = ItemVimeoDeleteController(token_data, source_id)
+    return await controller.delete_item(item_id)
+
+
 @router.put("/{item_id}/vimeo-meta")
 async def item_update_vimeo_meta(
     encryption_key: str,
@@ -77,6 +90,15 @@ async def item_update_vimeo_meta(
     return await ItemVimeoDetailController(
         token_data, source_id, item_id
     ).item_update_vimeo_meta(encryption_key, payload)
+
+
+@router.get("/{item_id}/related")
+async def get_related(
+    source_id: int,
+    item_id: int,
+    token_data: AccessTokenData = Depends(get_current_user),
+) -> dict:
+    return await ItemVimeoDetailController(token_data, source_id, item_id).get_related()
 
 
 @router.post("/{item_id}/tags")
