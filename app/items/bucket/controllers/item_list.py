@@ -50,7 +50,7 @@ class ItemBucketListController(SourceBucketDetailController):
                 self.source_id,
             )
             combined_values: tuple = values + tuple(payload.tag_ids)
-            result: Record = await self.db.select_many(query, *combined_values)
+            result: Record = await self.db.select_many(query, combined_values)
         else:
             query = """SELECT
             count(*) OVER () AS total_count,
