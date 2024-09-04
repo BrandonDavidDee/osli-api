@@ -1,17 +1,23 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
+
 from app.me.controllers.saved_items import SavedItemsController
-from unittest.mock import patch, AsyncMock
 
 
 @pytest.fixture
 def mock_get_bucket_items():
-    with patch.object(SavedItemsController, 'get_saved_bucket_items', new_callable=AsyncMock) as mock_data:
+    with patch.object(
+        SavedItemsController, "get_saved_bucket_items", new_callable=AsyncMock
+    ) as mock_data:
         yield mock_data
 
 
 @pytest.fixture
 def mock_get_vimeo_items():
-    with patch.object(SavedItemsController, 'get_saved_vimeo_items', new_callable=AsyncMock) as mock_data:
+    with patch.object(
+        SavedItemsController, "get_saved_vimeo_items", new_callable=AsyncMock
+    ) as mock_data:
         yield mock_data
 
 
@@ -31,7 +37,7 @@ def test_saved_items(client, mock_get_bucket_items, mock_get_vimeo_items):
             "source_title": "source-title",
             "bucket_name": "bucket-name",
             "media_prefix": "",
-            "grid_view": "true"
+            "grid_view": "true",
         }
     ]
     mock_get_vimeo_items.return_value = [

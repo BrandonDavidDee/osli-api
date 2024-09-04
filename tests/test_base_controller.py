@@ -1,7 +1,9 @@
-import pytest
 import string
-from app.controller import BaseController
+
+import pytest
+
 from app.authentication.models import AccessTokenData
+from app.controller import BaseController
 
 token_data = AccessTokenData(user_id="1")
 

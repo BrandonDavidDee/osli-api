@@ -1,6 +1,8 @@
-import pytest
-from app.controller import KeyEncryptionController
 import base64
+
+import pytest
+
+from app.controller import KeyEncryptionController
 
 data = "data-to-be-encrypted"
 passphrase = "user_passphrase"
@@ -32,7 +34,9 @@ class TestKeyEncryptionController:
         encrypted = encryption_controller.encrypt(data, passphrase, salt)
         assert isinstance(encrypted, str)
         decoded_encrypted = base64.urlsafe_b64decode(encrypted.encode("utf-8"))
-        assert len(decoded_encrypted) > len(salt)  # The output should be longer than the salt
+        assert len(decoded_encrypted) > len(
+            salt
+        )  # The output should be longer than the salt
         decrypted = encryption_controller.decrypt(encrypted, passphrase, salt)
         assert decrypted == data
 
@@ -45,11 +49,15 @@ class TestKeyEncryptionController:
     def test_encrypt_and_decrypt_api_secret(self, encryption_controller):
         encrypted_key = encryption_controller.encrypt_api_secret(data, passphrase)
         assert isinstance(encrypted_key, str)
-        decrypted_key = encryption_controller.decrypt_api_secret(encrypted_key, passphrase)
+        decrypted_key = encryption_controller.decrypt_api_secret(
+            encrypted_key, passphrase
+        )
         assert decrypted_key == data
 
     def test_encrypt_and_decrypt_access_token(self, encryption_controller):
         encrypted_key = encryption_controller.encrypt_access_token(data, passphrase)
         assert isinstance(encrypted_key, str)
-        decrypted_key = encryption_controller.decrypt_access_token(encrypted_key, passphrase)
+        decrypted_key = encryption_controller.decrypt_access_token(
+            encrypted_key, passphrase
+        )
         assert decrypted_key == data

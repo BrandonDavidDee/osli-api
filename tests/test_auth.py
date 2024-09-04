@@ -1,34 +1,37 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
+
 from app.authentication.controller import AuthControllerBase
-from app.users.models import UserInDB, User
+from app.users.models import User, UserInDB
 
 HASHED_PASSWORD = "$2b$12$OjH9jIdb5qpptt/GiWWk0O/hHRmVcopmiciccbPePjBTbhaJLG5Gm"
 PLAIN_PASSWORD = "mypassword"
 WRONG_PASSWORD = "incorrect-password"
 
-USER = UserInDB(
-    id=1,
-    is_active=True,
-    hashed_password=HASHED_PASSWORD,
-    username=""
-)
+USER = UserInDB(id=1, is_active=True, hashed_password=HASHED_PASSWORD, username="")
 
 
 @pytest.fixture
 def mock_get_user_in_db():
-    with patch.object(AuthControllerBase, 'get_user_in_db', new_callable=AsyncMock) as mock_get_user_in_db:
+    with patch.object(
+        AuthControllerBase, "get_user_in_db", new_callable=AsyncMock
+    ) as mock_get_user_in_db:
         yield mock_get_user_in_db
 
 
 @pytest.fixture
 def mock_create_token_pair():
-    with patch.object(AuthControllerBase, 'create_token_pair') as mock_create_token_pair:
+    with patch.object(
+        AuthControllerBase, "create_token_pair"
+    ) as mock_create_token_pair:
         yield mock_create_token_pair
 
 
 class TestLogin:
-    def test_login_active_user(self, client, mock_get_user_in_db, mock_create_token_pair):
+    def test_login_active_user(
+        self, client, mock_get_user_in_db, mock_create_token_pair
+    ):
         mock_get_user_in_db.return_value = USER
         output_user = USER.model_dump(exclude={"hashed_password"})
         mock_create_token_pair.return_value = {
@@ -94,4 +97,3 @@ class TestPermissions:
         response = client.get("/api/authentication/permission-groups")
         assert response.status_code == 200
         assert isinstance(response.json(), list)
-
