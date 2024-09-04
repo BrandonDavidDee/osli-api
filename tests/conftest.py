@@ -20,6 +20,24 @@ def client():
 
 
 @pytest.fixture
-def db_select_many():
-    with patch.object(db, "select_many", new_callable=AsyncMock) as mock_select_many:
-        yield mock_select_many
+def mock_db_select_one():
+    with patch.object(db, "select_one", new_callable=AsyncMock) as mock_func:
+        yield mock_func
+
+
+@pytest.fixture
+def mock_db_select_many():
+    with patch.object(db, "select_many", new_callable=AsyncMock) as mock_func:
+        yield mock_func
+
+
+@pytest.fixture
+def mock_db_insert():
+    with patch.object(db, "insert", new_callable=AsyncMock) as mock_func:
+        yield mock_func
+
+
+@pytest.fixture
+def mock_db_delete_one():
+    with patch.object(db, "delete_one", new_callable=AsyncMock) as mock_func:
+        yield mock_func
