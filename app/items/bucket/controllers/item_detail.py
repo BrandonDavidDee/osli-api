@@ -81,7 +81,17 @@ class ItemBucketDetailController(BaseController):
         await self.db.insert(query, values)
         return payload
 
-    async def get_related_gallery_items(self) -> list[Gallery]:
+    async def get_related(self) -> dict:
+        galleries = await self._get_related_gallery_items()
+        saved_users = await self._get_related_saved_items()
+        has_related: bool = bool(len(galleries)) or bool(len(saved_users))
+        return {
+            "has_related": has_related,
+            "galleries": galleries,
+            "saved_users": saved_users,
+        }
+
+    async def _get_related_gallery_items(self) -> list[Gallery]:
         query = """SELECT g.*
         FROM gallery_item gi
         LEFT JOIN gallery g ON g.id = gi.gallery_id 
@@ -104,7 +114,7 @@ class ItemBucketDetailController(BaseController):
                 output.append(gallery)
         return output
 
-    async def get_related_saved_items(self) -> list[str]:
+    async def _get_related_saved_items(self) -> list[str]:
         query = """SELECT u.username 
         FROM saved_item_bucket sib
         LEFT JOIN auth_user u ON u.id = sib.created_by_id
@@ -117,13 +127,3 @@ class ItemBucketDetailController(BaseController):
             if username not in output:
                 output.append(username)
         return output
-
-    async def get_related(self) -> dict:
-        galleries = await self.get_related_gallery_items()
-        saved_users = await self.get_related_saved_items()
-        has_related: bool = bool(len(galleries)) or bool(len(saved_users))
-        return {
-            "has_related": has_related,
-            "galleries": galleries,
-            "saved_users": saved_users,
-        }

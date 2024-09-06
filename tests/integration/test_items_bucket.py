@@ -5,6 +5,7 @@ import pytest
 
 from app.items.bucket.controllers.item_upload import BatchUploadController
 from app.items.bucket.controllers.item_list import ItemBucketListController
+from app.items.bucket.controllers.item_detail import ItemBucketDetailController
 
 
 @pytest.fixture
@@ -263,3 +264,30 @@ class TestItemBucketDelete:
 
         assert response.status_code == 200
         assert data == self.item_id
+
+
+class TestItemBucketRelated:
+    item_id = 100
+    url = f"/api/items/bucket/{item_id}/related?source_id=1"
+
+    def test_related_missing_source_id(self, client):
+        response = client.get(f"/api/items/bucket/{self.item_id}/related")
+        assert response.status_code == 422
+
+    def test_related(self, client):
+        with patch.object(
+            ItemBucketDetailController,
+            "_get_related_gallery_items",
+            return_value=[],
+        ) as mock_get_related_gallery_items, patch.object(
+            ItemBucketDetailController,
+            "_get_related_saved_items",
+            return_value=[],
+        ) as mock_get_related_saved_items:
+            response = client.get(self.url)
+            data = response.json()
+
+            assert response.status_code == 200
+            assert data["has_related"] is False
+            mock_get_related_gallery_items.assert_called_once()
+            mock_get_related_saved_items.assert_called_once()
