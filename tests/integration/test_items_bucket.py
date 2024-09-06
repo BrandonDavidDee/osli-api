@@ -68,10 +68,10 @@ class TestItemBucketSearch:
         data = response.json()
 
         assert response.status_code == 200
-        mock_database_select_many.assert_called_once()
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 1
+        mock_database_select_many.assert_called_once()
 
     def test_search_no_tags_no_results(
         self, client, mock_database_select_many, mock_source_detail
@@ -83,11 +83,11 @@ class TestItemBucketSearch:
         data = response.json()
 
         assert response.status_code == 200
-        mock_database_select_many.assert_called_once()
-        mock_source_detail.assert_called_once()  # is called when there are no results
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 0
+        mock_database_select_many.assert_called_once()
+        mock_source_detail.assert_called_once()  # is called when there are no results
 
     def test_search_with_tags(self, client, mock_database_select_many):
         mock_database_select_many.return_value = [self.mock_db_row]
@@ -96,10 +96,10 @@ class TestItemBucketSearch:
         data = response.json()
 
         assert response.status_code == 200
-        mock_database_select_many.assert_called_once()
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 1
+        mock_database_select_many.assert_called_once()
 
     def test_search_with_tags_no_results(
         self, client, mock_database_select_many, mock_source_detail
@@ -111,8 +111,86 @@ class TestItemBucketSearch:
         data = response.json()
 
         assert response.status_code == 200
-        mock_database_select_many.assert_called_once()
-        mock_source_detail.assert_called_once()  # is called when there are no results
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 0
+        mock_database_select_many.assert_called_once()
+        mock_source_detail.assert_called_once()  # is called when there are no results
+
+
+class TestItemBucketDetail:
+    item_id = 100
+    source_id = 1
+    mock_tag_id_alpha = 11002299
+    mock_tag_id_bravo = 33884477
+    url = f"/api/items/bucket/{item_id}?source_id={source_id}"
+    mock_db_rows = [
+        {
+            "id": item_id,
+            "source_bucket_id": source_id,
+            "title": None,
+            "mime_type": "image/jpeg",
+            "file_path": "pages/a_random_image.jpg",
+            "file_size": 239762,
+            "notes": None,
+            "date_created": "2023-07-13T16:45:52.038852+00:00",
+            "created_by_id": 1,
+            "saved_item_id": None,
+            "source_title": "",
+            "bucket_name": "",
+            "media_prefix": "",
+            "grid_view": True,
+            "tag_item_id": 318,
+            "tag_id": mock_tag_id_alpha,
+            "tag_title": "Alpha",
+        },
+        {
+            "id": item_id,
+            "source_bucket_id": source_id,
+            "title": None,
+            "mime_type": "image/jpeg",
+            "file_path": "pages/a_random_image.jpg",
+            "file_size": 239762,
+            "notes": None,
+            "date_created": "2023-07-13T16:45:52.038852+00:00",
+            "created_by_id": 1,
+            "saved_item_id": None,
+            "source_title": "",
+            "bucket_name": "",
+            "media_prefix": "",
+            "grid_view": True,
+            "tag_item_id": 319,
+            "tag_id": mock_tag_id_bravo,
+            "tag_title": "Bravo",
+        },
+    ]
+
+    def test_detail_not_found(self, client, mock_database_select_many):
+        mock_database_select_many.return_value = []
+        response = client.get(self.url)
+        assert response.status_code == 404
+
+    def test_detail(self, client, mock_database_select_many):
+        mock_database_select_many.return_value = self.mock_db_rows
+
+        response = client.get(self.url)
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data["id"] == self.item_id
+        assert len(data["tags"]) == 2
+        tag_alpha_exists = bool(
+            next(
+                (x for x in data["tags"] if x["tag"]["id"] == self.mock_tag_id_alpha),
+                None,
+            )
+        )
+        tag_bravo_exists = bool(
+            next(
+                (x for x in data["tags"] if x["tag"]["id"] == self.mock_tag_id_bravo),
+                None,
+            )
+        )
+        assert tag_alpha_exists is True
+        assert tag_bravo_exists is True
+        mock_database_select_many.assert_called_once()
