@@ -29,12 +29,6 @@ class TestItemBucketUpload:
 
 
 @pytest.fixture
-def mock_database_select_many():
-    with patch("app.db.Database.select_many") as mock_select_many:
-        yield mock_select_many
-
-
-@pytest.fixture
 def mock_source_detail():
     with patch.object(ItemBucketListController, "source_detail") as mock_source_detail:
         yield mock_source_detail
@@ -61,8 +55,8 @@ class TestItemBucketSearch:
         "grid_view": True,
     }
 
-    def test_search_no_tags(self, client, mock_database_select_many):
-        mock_database_select_many.return_value = [self.mock_db_row]
+    def test_search_no_tags(self, client, mock_db_select_many):
+        mock_db_select_many.return_value = [self.mock_db_row]
 
         response = client.post(self.url, json=self.payload)
         data = response.json()
@@ -71,13 +65,13 @@ class TestItemBucketSearch:
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 1
-        mock_database_select_many.assert_called_once()
+        mock_db_select_many.assert_called_once()
 
     def test_search_no_tags_no_results(
-        self, client, mock_database_select_many, mock_source_detail
+        self, client, mock_db_select_many, mock_source_detail
     ):
         mock_source_detail.return_value = {}
-        mock_database_select_many.return_value = []
+        mock_db_select_many.return_value = []
 
         response = client.post(self.url, json=self.payload)
         data = response.json()
@@ -86,11 +80,11 @@ class TestItemBucketSearch:
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 0
-        mock_database_select_many.assert_called_once()
+        mock_db_select_many.assert_called_once()
         mock_source_detail.assert_called_once()  # is called when there are no results
 
-    def test_search_with_tags(self, client, mock_database_select_many):
-        mock_database_select_many.return_value = [self.mock_db_row]
+    def test_search_with_tags(self, client, mock_db_select_many):
+        mock_db_select_many.return_value = [self.mock_db_row]
 
         response = client.post(self.url, json=self.payload_with_tags)
         data = response.json()
@@ -99,13 +93,13 @@ class TestItemBucketSearch:
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 1
-        mock_database_select_many.assert_called_once()
+        mock_db_select_many.assert_called_once()
 
     def test_search_with_tags_no_results(
-        self, client, mock_database_select_many, mock_source_detail
+        self, client, mock_db_select_many, mock_source_detail
     ):
         mock_source_detail.return_value = {}
-        mock_database_select_many.return_value = []
+        mock_db_select_many.return_value = []
 
         response = client.post(self.url, json=self.payload_with_tags)
         data = response.json()
@@ -114,7 +108,7 @@ class TestItemBucketSearch:
         assert "source" in data
         assert "items" in data
         assert len(data["items"]) == 0
-        mock_database_select_many.assert_called_once()
+        mock_db_select_many.assert_called_once()
         mock_source_detail.assert_called_once()  # is called when there are no results
 
 
@@ -165,13 +159,13 @@ class TestItemBucketDetail:
         },
     ]
 
-    def test_detail_not_found(self, client, mock_database_select_many):
-        mock_database_select_many.return_value = []
+    def test_detail_not_found(self, client, mock_db_select_many):
+        mock_db_select_many.return_value = []
         response = client.get(self.url)
         assert response.status_code == 404
 
-    def test_detail(self, client, mock_database_select_many):
-        mock_database_select_many.return_value = self.mock_db_rows
+    def test_detail(self, client, mock_db_select_many):
+        mock_db_select_many.return_value = self.mock_db_rows
 
         response = client.get(self.url)
         data = response.json()
@@ -193,4 +187,4 @@ class TestItemBucketDetail:
         )
         assert tag_alpha_exists is True
         assert tag_bravo_exists is True
-        mock_database_select_many.assert_called_once()
+        mock_db_select_many.assert_called_once()

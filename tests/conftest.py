@@ -20,24 +20,26 @@ def client():
 
 
 @pytest.fixture
-def mock_db_select_one():
-    with patch.object(db, "select_one", new_callable=AsyncMock) as mock_func:
-        yield mock_func
+def mock_db_select_many():
+    # this replaces patch.object: patch.object(db, "select_many", new_callable=AsyncMock)
+    # that did not work when called from deeply nested controllers
+    with patch("app.db.Database.select_many") as mock_select_many:
+        yield mock_select_many
 
 
 @pytest.fixture
-def mock_db_select_many():
-    with patch.object(db, "select_many", new_callable=AsyncMock) as mock_func:
+def mock_db_select_one():
+    with patch("app.db.Database.select_one") as mock_func:
         yield mock_func
 
 
 @pytest.fixture
 def mock_db_insert():
-    with patch.object(db, "insert", new_callable=AsyncMock) as mock_func:
+    with patch("app.db.Database.insert") as mock_func:
         yield mock_func
 
 
 @pytest.fixture
 def mock_db_delete_one():
-    with patch.object(db, "delete_one", new_callable=AsyncMock) as mock_func:
+    with patch("app.db.Database.delete_one") as mock_func:
         yield mock_func
