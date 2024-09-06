@@ -8,16 +8,30 @@ from app.items.bucket.controllers.item_list import ItemBucketListController
 
 
 @pytest.fixture
-def mock_s3_api_controller():
+def mock_s3_batch_upload():
     with patch.object(
         BatchUploadController, "s3_batch_upload", new_callable=AsyncMock
     ) as mock_s3_api_controller:
         yield mock_s3_api_controller
 
 
+@pytest.fixture
+def mock_source_detail():
+    with patch.object(ItemBucketListController, "source_detail") as mock_source_detail:
+        yield mock_source_detail
+
+
+@pytest.fixture
+def mock_s3_object_delete():
+    with patch(
+        "app.sources.bucket.controllers.s3_api.S3ApiController.s3_object_delete"
+    ) as mock_func:
+        yield mock_func
+
+
 class TestItemBucketUpload:
-    def test_item_batch_upload(self, client, mock_s3_api_controller):
-        mock_s3_api_controller.return_value = {"new_keys": ["key1", "key2"]}
+    def test_item_batch_upload(self, client, mock_s3_batch_upload):
+        mock_s3_batch_upload.return_value = {"new_keys": ["key1", "key2"]}
         files = [
             ("files", ("file1.txt", BytesIO(b"file1 content"), "text/plain")),
             ("files", ("file2.txt", BytesIO(b"file2 content"), "text/plain")),
@@ -26,12 +40,6 @@ class TestItemBucketUpload:
         response = client.post("/api/items/bucket", params=data, files=files)
         assert response.status_code == 200
         assert response.json() == {"new_keys": ["key1", "key2"]}
-
-
-@pytest.fixture
-def mock_source_detail():
-    with patch.object(ItemBucketListController, "source_detail") as mock_source_detail:
-        yield mock_source_detail
 
 
 class TestItemBucketSearch:
@@ -159,6 +167,11 @@ class TestItemBucketDetail:
         },
     ]
 
+    def test_detail_missing_source_id(self, client):
+        url = f"/api/items/bucket/{self.item_id}"
+        response = client.get(url)
+        assert response.status_code == 422
+
     def test_detail_not_found(self, client, mock_db_select_many):
         mock_db_select_many.return_value = []
         response = client.get(self.url)
@@ -188,3 +201,65 @@ class TestItemBucketDetail:
         assert tag_alpha_exists is True
         assert tag_bravo_exists is True
         mock_db_select_many.assert_called_once()
+
+
+class TestItemBucketUpdate:
+    item_id = 100
+
+    def test_update_missing_source_id(self, client):
+        response = client.put(f"/api/items/bucket/{self.item_id}", json={})
+        assert response.status_code == 422
+
+    def test_update(self, client, mock_db_insert):
+        mock_db_insert.return_value = {}
+
+        payload = {
+            "id": self.item_id,
+            "title": "foo",
+            "file_path": "pages/a_random_image.jpg",
+        }
+        response = client.put(
+            f"/api/items/bucket/{self.item_id}?source_id=1", json=payload
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data["id"] == self.item_id
+
+
+class TestItemBucketDelete:
+    item_id = 100
+    payload = {"id": item_id, "title": "foo", "file_path": "pages/a_random_image.jpg"}
+    url = f"/api/items/bucket/{item_id}/delete?source_id=1&encryption_key=foo"
+
+    def test_delete_missing_encrypt_key(self, client):
+        response = client.put(f"/api/items/bucket/{self.item_id}/delete?source_id=1")
+        assert response.status_code == 422
+
+    def test_delete_missing_source_id(self, client):
+        response = client.put(
+            f"/api/items/bucket/{self.item_id}/delete?encryption_key=foo"
+        )
+        assert response.status_code == 422
+
+    def test_delete_not_found_on_s3(
+        self, client, mock_db_delete_one, mock_s3_object_delete
+    ):
+        mock_s3_object_delete.return_value = None  # s3_object_delete returns nothing
+        mock_db_delete_one.return_value = {}
+
+        response = client.put(self.url, json=self.payload)
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data == self.item_id
+
+    def test_delete(self, client, mock_db_delete_one, mock_s3_object_delete):
+        mock_s3_object_delete.return_value = {}
+        mock_db_delete_one.return_value = {}
+
+        response = client.put(self.url, json=self.payload)
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data == self.item_id

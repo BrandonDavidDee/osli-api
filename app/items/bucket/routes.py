@@ -74,7 +74,7 @@ async def item_delete(
     encryption_key: str,
     payload: ItemBucket,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> dict:
+) -> int:
     controller = ItemBucketDeleteController(token_data=token_data, source_id=source_id)
     return await controller.delete_item(
         encryption_key=encryption_key, item_id=item_id, payload=payload

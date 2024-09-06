@@ -9,7 +9,7 @@ class ItemBucketDeleteController(S3ApiController):
 
     async def delete_item(
         self, encryption_key: str, item_id: int, payload: ItemBucket
-    ) -> dict:
+    ) -> int:
         key = payload.file_path
         result: dict = await self.s3_object_delete(encryption_key, key)
         if result:
@@ -19,4 +19,4 @@ class ItemBucketDeleteController(S3ApiController):
                 item_id,
             )
             await self.db.delete_one(query, values)
-        return result
+        return item_id
