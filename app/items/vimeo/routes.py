@@ -161,7 +161,7 @@ async def item_link_delete(
     item_id: int,
     item_link_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> Response:
+) -> int:
     controller = ItemVimeoLinkController(token_data, item_id)
     return await controller.item_link_delete(item_link_id)
 
