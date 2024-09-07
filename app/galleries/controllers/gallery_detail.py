@@ -96,34 +96,23 @@ class GalleryDetailController(BaseController):
         self.gallery_id = gallery_id
         self.assembly_stub = GalleryAssemblyStub()
 
-    @staticmethod
-    async def update_item_order(
-        connection: Connection, items: list[GalleryItem]
-    ) -> None:
-        for item in items:
-            query = "UPDATE gallery_item SET item_order = $1 WHERE id = $2"
-            values: tuple = (
+    async def gallery_update(self, gallery_id: int, payload: Gallery) -> Gallery:
+        query = "UPDATE gallery SET title = $1, description = $2 WHERE id = $3"
+        values: tuple = (
+            payload.title,
+            payload.description,
+            gallery_id,
+        )
+        queries: list[tuple] = [(query, values)]
+        item_query = "UPDATE gallery_item SET item_order = $1 WHERE id = $2"
+        for item in payload.items:
+            item_values: tuple = (
                 item.item_order,
                 item.id,
             )
-            await connection.fetchrow(query, values)
-
-    async def gallery_update(self, gallery_id: int, payload: Gallery) -> Gallery:
-        async with self.db.get_connection() as connection:
-            try:
-                query = "UPDATE gallery SET title = $1, description = $2 WHERE id = $3"
-                values: tuple = (
-                    payload.title,
-                    payload.description,
-                    gallery_id,
-                )
-                await connection.fetchrow(query, values)
-                await self.update_item_order(connection, payload.items)
-                return payload
-            except HTTPException as exc:
-                raise exc
-            except Exception as exc:
-                raise HTTPException(status_code=500, detail=str(exc))
+            queries.append((item_query, item_values))
+        await self.db.bulk_update(queries)
+        return payload
 
     async def get_gallery_detail(self) -> Gallery:
         query = """SELECT 

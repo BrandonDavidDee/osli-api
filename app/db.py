@@ -1,8 +1,7 @@
 import os
-from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any
 
-from asyncpg import Connection, Record, UniqueViolationError, create_pool
+from asyncpg import Record, UniqueViolationError, create_pool
 from fastapi import HTTPException, Response
 from sqlalchemy.orm import declarative_base
 
@@ -84,6 +83,28 @@ class Database:
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
+    async def bulk_update(
+        self, query_value_pairs: list[tuple[str, tuple[Any, ...] | Any]]
+    ) -> None:
+        """
+        Execute multiple distinct SQL queries with corresponding values in a single transaction.
+
+        :param query_value_pairs: List of tuples, each containing a query and its corresponding values.
+        """
+        if self.pool is None:
+            raise HTTPException(status_code=500, detail="Database pool is empty")
+
+        async with self.pool.acquire() as connection:
+            async with connection.transaction():
+                try:
+                    for query, values in query_value_pairs:
+                        if isinstance(values, tuple):
+                            await connection.execute(query, *values)
+                        else:
+                            await connection.execute(query, values)
+                except Exception as exc:
+                    raise HTTPException(status_code=500, detail=str(exc))
+
     async def delete_one(self, query: str, values: tuple[Any, ...] | Any) -> Response:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
@@ -95,24 +116,6 @@ class Database:
                     else:
                         await connection.execute(query, values)
                     return Response()
-                except Exception as exc:
-                    raise HTTPException(status_code=500, detail=str(exc))
-
-    @asynccontextmanager
-    async def get_connection(
-        self, unique_err_message: str | None = None
-    ) -> AsyncGenerator[Connection, None]:
-        if self.pool is None:
-            raise HTTPException(status_code=500, detail="Database pool is empty")
-        async with self.pool.acquire() as connection:
-            async with connection.transaction():
-                try:
-                    yield connection
-                except UniqueViolationError as exc:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=unique_err_message or f"Unique Violation Error: {exc}",
-                    )
                 except Exception as exc:
                     raise HTTPException(status_code=500, detail=str(exc))
 
