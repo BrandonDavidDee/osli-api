@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, patch
 import random
+import string
 from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +20,90 @@ def get_random_datetime():
         days=random_days, seconds=random_seconds
     )
     return random_datetime.isoformat()
+
+
+def get_random_string(length: int) -> str:
+    characters = string.ascii_letters + string.digits
+    return "".join(random.choice(characters) for _ in range(length))
+
+
+@pytest.fixture(scope="session")
+def dummy_data():
+    return {
+        "row_id": random.randint(0, 365),
+        "user_id": random.randint(0, 365),
+        "user_name": get_random_string(10),
+        "date_time_object": datetime.now(),
+        "date_time_string": get_random_datetime(),
+        "bucket_name": get_random_string(10),
+        "media_prefix": get_random_string(50),
+    }
+
+
+@pytest.fixture(scope="session")
+def dummy_user():
+    return {
+        "id": random.randint(0, 365),
+        "username": get_random_string(10),
+        "date_created": get_random_datetime(),
+        "created_by_id": random.randint(0, 365),
+    }
+
+
+@pytest.fixture(scope="session")
+def dummy_source_bucket():
+    return {
+        "id": random.randint(0, 365),
+        "title": get_random_string(10),
+        "bucket_name": get_random_string(10),
+        "access_key_id": get_random_string(50),
+        "secret_access_key": get_random_string(50),
+        "media_prefix": get_random_string(50),
+        "created_by_id": random.randint(0, 365),
+        "date_created": get_random_datetime(),
+    }
+
+
+@pytest.fixture(scope="session")
+def dummy_source_vimeo():
+    return {
+        "id": random.randint(0, 365),
+        "title": get_random_string(10),
+        "client_identifier": get_random_string(50),
+        "client_secret": get_random_string(50),
+        "access_token": get_random_string(50),
+        "created_by_id": random.randint(0, 365),
+        "date_created": get_random_datetime(),
+    }
+
+
+@pytest.fixture(scope="session")
+def dummy_item_bucket():
+    file_name = get_random_string(10)
+    return {
+        "id": random.randint(0, 365),
+        "title": get_random_string(10),
+        "mime_type": "image/jpeg",
+        "file_path": f"images/{file_name}.jpg",
+        "file_size": random.randint(100000, 10000000),
+        "created_by_id": random.randint(0, 365),
+        "date_created": get_random_datetime(),
+    }
+
+
+@pytest.fixture(scope="session")
+def dummy_item_vimeo():
+    file_name = get_random_string(30)
+    return {
+        "id": random.randint(0, 365),
+        "title": get_random_string(10),
+        "video_id": "None",
+        "thumbnail": f"https://i.vimeocdn.com/video/{file_name}_960x540?r=pad",
+        "width": 1920,
+        "height": 1080,
+        "created_by_id": random.randint(0, 365),
+        "date_created": get_random_datetime(),
+    }
 
 
 @pytest.fixture(scope="session")

@@ -1,19 +1,11 @@
 from io import BytesIO
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from app.items.bucket.controllers.item_upload import BatchUploadController
 from app.items.bucket.controllers.item_list import ItemBucketListController
 from app.items.bucket.controllers.item_detail import ItemBucketDetailController
-
-
-@pytest.fixture(scope="function")
-def mock_s3_batch_upload():
-    with patch.object(
-        BatchUploadController, "s3_batch_upload", new_callable=AsyncMock
-    ) as mock_s3_api_controller:
-        yield mock_s3_api_controller
 
 
 @pytest.fixture(scope="function")
@@ -31,16 +23,23 @@ def mock_s3_object_delete():
 
 
 class TestItemBucketUpload:
-    def test_item_batch_upload(self, client, mock_s3_batch_upload):
-        mock_s3_batch_upload.return_value = {"new_keys": ["key1", "key2"]}
+    def test_item_batch_upload(self, client):
+        mock_s3_batch_upload_return_value = {"new_keys": ["key1", "key2"]}
         files = [
             ("files", ("file1.txt", BytesIO(b"file1 content"), "text/plain")),
             ("files", ("file2.txt", BytesIO(b"file2 content"), "text/plain")),
         ]
-        data = {"source_id": 123, "encryption_key": "my-secret-key"}
-        response = client.post("/api/items/bucket", params=data, files=files)
-        assert response.status_code == 200
-        assert response.json() == {"new_keys": ["key1", "key2"]}
+        with patch.object(
+            BatchUploadController,
+            "s3_batch_upload",
+            return_value=mock_s3_batch_upload_return_value,
+        ) as mock_s3_api_controller:
+            data = {"source_id": 123, "encryption_key": "my-secret-key"}
+            response = client.post("/api/items/bucket", params=data, files=files)
+
+            assert response.status_code == 200
+            assert response.json() == {"new_keys": ["key1", "key2"]}
+            mock_s3_api_controller.assert_called_once()
 
 
 class TestItemBucketSearch:
