@@ -8,7 +8,7 @@ from app.items.bucket.controllers.item_list import ItemBucketListController
 from app.items.bucket.controllers.item_detail import ItemBucketDetailController
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_s3_batch_upload():
     with patch.object(
         BatchUploadController, "s3_batch_upload", new_callable=AsyncMock
@@ -16,13 +16,13 @@ def mock_s3_batch_upload():
         yield mock_s3_api_controller
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_source_detail():
     with patch.object(ItemBucketListController, "source_detail") as mock_source_detail:
         yield mock_source_detail
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_s3_object_delete():
     with patch(
         "app.sources.bucket.controllers.s3_api.S3ApiController.s3_object_delete"

@@ -3,7 +3,7 @@ from unittest.mock import patch, AsyncMock
 from app.tags.controller import TagController
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_get_bucket_tag_count():
     with patch.object(
         TagController, "_get_bucket_tag_count", new_callable=AsyncMock
@@ -11,7 +11,7 @@ def mock_get_bucket_tag_count():
         yield mock_method
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_get_vimeo_tag_count():
     with patch.object(
         TagController, "_get_vimeo_tag_count", new_callable=AsyncMock

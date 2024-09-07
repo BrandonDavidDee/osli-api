@@ -7,7 +7,7 @@ from app.items.vimeo.controllers.item_detail import ItemVimeoDetailController
 from app.sources.vimeo.controllers.vimeo_api import VimeoApiController
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_source_detail():
     with patch.object(ItemVimeoListController, "source_detail") as mock_source_detail:
         yield mock_source_detail

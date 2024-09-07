@@ -5,7 +5,7 @@ import pytest
 from app.me.controllers.saved_items import SavedItemsController
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_get_bucket_items():
     with patch.object(
         SavedItemsController, "get_saved_bucket_items", new_callable=AsyncMock
@@ -13,7 +13,7 @@ def mock_get_bucket_items():
         yield mock_data
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_get_vimeo_items():
     with patch.object(
         SavedItemsController, "get_saved_vimeo_items", new_callable=AsyncMock
