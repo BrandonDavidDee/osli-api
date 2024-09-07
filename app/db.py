@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 from asyncpg import Record, UniqueViolationError, create_pool
@@ -108,6 +109,10 @@ class Database:
     async def delete_one(self, query: str, values: tuple[Any, ...] | Any) -> Response:
         if self.pool is None:
             raise HTTPException(status_code=500, detail="Database pool is empty")
+        if not re.search(r"\bWHERE\b", query, re.IGNORECASE):
+            raise HTTPException(
+                status_code=500, detail="No WHERE clause in sql statement"
+            )
         async with self.pool.acquire() as connection:
             async with connection.transaction():
                 try:
