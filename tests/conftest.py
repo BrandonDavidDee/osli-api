@@ -28,22 +28,9 @@ def get_random_string(length: int) -> str:
 
 
 @pytest.fixture(scope="session")
-def dummy_data():
-    return {
-        "row_id": random.randint(0, 365),
-        "user_id": random.randint(0, 365),
-        "user_name": get_random_string(10),
-        "date_time_object": datetime.now(),
-        "date_time_string": get_random_datetime(),
-        "bucket_name": get_random_string(10),
-        "media_prefix": get_random_string(50),
-    }
-
-
-@pytest.fixture(scope="session")
 def dummy_user():
     return {
-        "id": random.randint(0, 365),
+        "id": random.randint(1, 100),
         "username": get_random_string(10),
         "date_created": get_random_datetime(),
         "created_by_id": random.randint(0, 365),
@@ -53,7 +40,7 @@ def dummy_user():
 @pytest.fixture(scope="session")
 def dummy_source_bucket():
     return {
-        "id": random.randint(0, 365),
+        "id": random.randint(1, 100),
         "title": get_random_string(10),
         "bucket_name": get_random_string(10),
         "access_key_id": get_random_string(50),
@@ -67,7 +54,7 @@ def dummy_source_bucket():
 @pytest.fixture(scope="session")
 def dummy_source_vimeo():
     return {
-        "id": random.randint(0, 365),
+        "id": random.randint(1, 100),
         "title": get_random_string(10),
         "client_identifier": get_random_string(50),
         "client_secret": get_random_string(50),
@@ -81,7 +68,7 @@ def dummy_source_vimeo():
 def dummy_item_bucket():
     file_name = get_random_string(10)
     return {
-        "id": random.randint(0, 365),
+        "id": random.randint(1, 10000),
         "title": get_random_string(10),
         "mime_type": "image/jpeg",
         "file_path": f"images/{file_name}.jpg",
@@ -95,7 +82,7 @@ def dummy_item_bucket():
 def dummy_item_vimeo():
     file_name = get_random_string(30)
     return {
-        "id": random.randint(0, 365),
+        "id": random.randint(1, 10000),
         "title": get_random_string(10),
         "video_id": "None",
         "thumbnail": f"https://i.vimeocdn.com/video/{file_name}_960x540?r=pad",
@@ -137,4 +124,10 @@ def mock_db_insert():
 @pytest.fixture(scope="function")
 def mock_db_delete_one():
     with patch("app.db.Database.delete_one") as mock_func:
+        yield mock_func
+
+
+@pytest.fixture(scope="function")
+def mock_db_bulk_update():
+    with patch("app.db.Database.bulk_update") as mock_func:
         yield mock_func
