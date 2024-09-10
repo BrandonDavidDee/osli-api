@@ -139,7 +139,8 @@ class GalleryLinkController(GalleryLinkUpdateController):
         payload.title = result["title"]
         return payload
 
-    async def gallery_link_delete(self, gallery_link_id: int) -> Response:
+    async def gallery_link_delete(self, gallery_link_id: int) -> int:
         query = "DELETE FROM gallery_link WHERE id = $1"
         values: tuple = (gallery_link_id,)
-        return await self.db.delete_one(query, values)
+        await self.db.delete_one(query, values)
+        return gallery_link_id

@@ -105,7 +105,7 @@ async def gallery_link_delete(
     gallery_id: int,
     gallery_link_id: int,
     token_data: AccessTokenData = Depends(get_current_user),
-) -> Response:
+) -> int:
     controller = GalleryLinkController(token_data, gallery_id)
     return await controller.gallery_link_delete(gallery_link_id)
 
