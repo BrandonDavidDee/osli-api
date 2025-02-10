@@ -44,7 +44,7 @@ async def gallery_update(
     token_data: AccessTokenData = Depends(get_current_user),
 ) -> Gallery:
     controller = GalleryDetailController(token_data, gallery_id)
-    return await controller.gallery_update(gallery_id, payload)
+    return await controller.gallery_update(payload)
 
 
 @router.post("/{gallery_id}/items")

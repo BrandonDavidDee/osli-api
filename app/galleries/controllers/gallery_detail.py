@@ -1,6 +1,6 @@
 import os
 
-from asyncpg import Connection, Record
+from asyncpg import Record
 from fastapi import HTTPException
 
 from app.authentication.models import AccessTokenData
@@ -96,12 +96,12 @@ class GalleryDetailController(BaseController):
         self.gallery_id = gallery_id
         self.assembly_stub = GalleryAssemblyStub()
 
-    async def gallery_update(self, gallery_id: int, payload: Gallery) -> Gallery:
+    async def gallery_update(self, payload: Gallery) -> Gallery:
         query = "UPDATE gallery SET title = $1, description = $2 WHERE id = $3"
         values: tuple = (
             payload.title,
             payload.description,
-            gallery_id,
+            self.gallery_id,
         )
         queries: list[tuple] = [(query, values)]
         item_query = "UPDATE gallery_item SET item_order = $1 WHERE id = $2"
