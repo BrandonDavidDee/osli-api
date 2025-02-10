@@ -37,7 +37,7 @@ async def item_vimeo_list(
     ),
 ) -> dict:
     controller = ItemVimeoListController(token_data, source_id)
-    return await controller.item_search(payload)
+    return await controller.item_search_new(payload)
 
 
 @router.get("/{item_id}")

@@ -37,7 +37,7 @@ async def item_search(
     ),
 ) -> dict:
     controller = ItemBucketListController(token_data, source_id)
-    return await controller.item_search(payload)
+    return await controller.item_search_new(payload)
 
 
 @router.get("/{item_id}")

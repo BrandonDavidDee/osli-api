@@ -12,7 +12,87 @@ class ItemBucketListController(SourceBucketDetailController):
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data, source_id)
 
-    async def item_search(self, payload: SearchParams) -> dict:
+    async def item_search_new(self, payload: SearchParams) -> dict:
+        base_query = """SELECT
+            count(*) OVER () AS total_count,
+            i.*,
+            source.title as source_title,
+            source.bucket_name,
+            source.media_prefix,
+            source.grid_view
+        FROM item_bucket AS i
+        LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
+        LEFT JOIN tag_item_bucket AS j ON j.item_bucket_id = i.id
+        LEFT JOIN tag AS t ON t.id = j.tag_id
+        WHERE (
+            ($3 = '') 
+            OR (i.notes ILIKE '%' || $4 || '%') 
+            OR (i.file_path ILIKE '%' || $5 || '%')
+            OR (i.title ILIKE '%' || $6 || '%')
+            OR (t.title ILIKE '%' || $7 || '%')
+        )
+        """
+
+        values: list = [
+            payload.limit,
+            payload.offset,
+            payload.filter,
+            payload.filter,
+            payload.filter,
+            payload.filter,
+            payload.filter,  # Used for tag title search
+        ]
+
+        if payload.tag_ids:
+            placeholders = ", ".join(
+                f"${i}" for i in range(8, 8 + len(payload.tag_ids))
+            )
+            base_query += f" AND j.tag_id IN ({placeholders})"
+            values.extend(payload.tag_ids)
+
+        # Dynamically set the placeholder for source_bucket_id
+        source_bucket_placeholder = f"${len(values) + 1}"
+        base_query += f" AND i.source_bucket_id = {source_bucket_placeholder}"
+
+        values.append(self.source_id)
+
+        # Finalizing query
+        base_query += """ 
+        GROUP BY i.id, source.title, source.bucket_name, source.media_prefix, source.grid_view
+        ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
+
+        result: Record = await self.db.select_many(base_query, tuple(values))
+        output: list[ItemBucket] = []
+
+        for row in result:
+            item = ItemBucket(**row)
+            if row["source_bucket_id"]:
+                item.source = SourceBucket(
+                    id=row["source_bucket_id"],
+                    title=row["source_title"],
+                    bucket_name=row["bucket_name"],
+                    media_prefix=row["media_prefix"],
+                    grid_view=row["grid_view"],
+                    source_type=SourceType.BUCKET,
+                )
+            item.file_name = self.get_filename(row["file_path"])
+            output.append(item)
+        total_count = result[0]["total_count"] if result else 0
+
+        if output:
+            # we've joined the source to each item:
+            source = output[0].source
+        else:
+            # but if there are no results, we still want the list view page to have source info:
+            source = await self.source_detail()
+
+        return {
+            "source": source,
+            "total_count": total_count,
+            "items": output,
+        }
+
+    async def item_search_old(self, payload: SearchParams) -> dict:
         if len(payload.tag_ids):
             query = """SELECT
             count(*) OVER () AS total_count,
