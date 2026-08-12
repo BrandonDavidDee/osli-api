@@ -1,3 +1,5 @@
+import re
+
 from asyncpg import Record
 
 from app.authentication.models import AccessTokenData
@@ -9,8 +11,21 @@ from app.sources.models import SourceType
 
 
 class ItemBucketListController(SourceBucketDetailController):
+    # Matches either a double-quoted phrase (captured without quotes) or a
+    # single whitespace-delimited token. Used to split a filter string like
+    # `Apple "Red Car" Black dog` into ["Apple", "Red Car", "Black", "dog"].
+    _TOKEN_PATTERN = re.compile(r'"([^"]+)"|(\S+)')
+
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data, source_id)
+
+    def _tokenize_filter(self, filter_str: str) -> list[str]:
+        terms: list[str] = []
+        for quoted, unquoted in self._TOKEN_PATTERN.findall(filter_str):
+            term = quoted.strip() if quoted else unquoted.strip()
+            if term:
+                terms.append(term)
+        return terms
 
     def _build_search_condition(
         self,
@@ -18,7 +33,7 @@ class ItemBucketListController(SourceBucketDetailController):
         column_names: list[str],
         start_index: int,
     ) -> tuple[str, list[str]]:
-        terms = [term for term in payload.filter.strip().split() if term]
+        terms = self._tokenize_filter(payload.filter.strip())
         if not terms:
             return "", []
 
