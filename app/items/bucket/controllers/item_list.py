@@ -46,9 +46,27 @@ class ItemBucketListController(SourceBucketDetailController):
             column_clauses = []
             for column_name in column_names:
                 values.append(term)
-                column_clauses.append(
-                    f"({column_name} ILIKE '%' || ${placeholder_index} || '%')"
-                )
+                # The tag title comes from a LEFT JOIN that produces one row
+                # per tag, so matching directly against `t.title` only ever
+                # sees a single tag per row. In "and" mode that breaks
+                # multi-tag matches (e.g. "Showit 2piece" where the item has
+                # both tags, but no single joined row has both titles). Use a
+                # correlated EXISTS check across ALL of the item's tags
+                # instead, so each term is evaluated independently of which
+                # tag row happens to be joined.
+                if column_name == "t.title":
+                    column_clauses.append(
+                        "(EXISTS ("
+                        "SELECT 1 FROM tag_item_bucket AS tib "
+                        "JOIN tag AS tg ON tg.id = tib.tag_id "
+                        "WHERE tib.item_bucket_id = i.id "
+                        f"AND tg.title ILIKE '%' || ${placeholder_index} || '%'"
+                        "))"
+                    )
+                else:
+                    column_clauses.append(
+                        f"({column_name} ILIKE '%' || ${placeholder_index} || '%')"
+                    )
                 placeholder_index += 1
             term_clauses.append("(" + " OR ".join(column_clauses) + ")")
 

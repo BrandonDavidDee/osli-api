@@ -11,6 +11,9 @@ from app.sources.vimeo.models import SourceVimeo
 
 
 class ItemVimeoListController(SourceVimeoDetailController):
+    # Matches either a double-quoted phrase (captured without quotes) or a
+    # single whitespace-delimited token. Used to split a filter string like
+    # `Apple "Red Car" Black dog` into ["Apple", "Red Car", "Black", "dog"].
     _TOKEN_PATTERN = re.compile(r'"([^"]+)"|(\S+)')
 
     def __init__(self, token_data: AccessTokenData, source_id: int):
@@ -43,9 +46,27 @@ class ItemVimeoListController(SourceVimeoDetailController):
             column_clauses = []
             for column_name in column_names:
                 values.append(term)
-                column_clauses.append(
-                    f"({column_name} ILIKE '%' || ${placeholder_index} || '%')"
-                )
+                # The tag title comes from a LEFT JOIN that produces one row
+                # per tag, so matching directly against `t.title` only ever
+                # sees a single tag per row. In "and" mode that breaks
+                # multi-tag matches (an item with two tags, one matching each
+                # term, has no single joined row with both titles). Use a
+                # correlated EXISTS check across ALL of the item's tags
+                # instead, so each term is evaluated independently of which
+                # tag row happens to be joined.
+                if column_name == "t.title":
+                    column_clauses.append(
+                        "(EXISTS ("
+                        "SELECT 1 FROM tag_item_vimeo AS tiv "
+                        "JOIN tag AS tg ON tg.id = tiv.tag_id "
+                        "WHERE tiv.item_vimeo_id = i.id "
+                        f"AND tg.title ILIKE '%' || ${placeholder_index} || '%'"
+                        "))"
+                    )
+                else:
+                    column_clauses.append(
+                        f"({column_name} ILIKE '%' || ${placeholder_index} || '%')"
+                    )
                 placeholder_index += 1
             term_clauses.append("(" + " OR ".join(column_clauses) + ")")
 
