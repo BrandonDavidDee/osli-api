@@ -12,6 +12,38 @@ class ItemBucketListController(SourceBucketDetailController):
     def __init__(self, token_data: AccessTokenData, source_id: int):
         super().__init__(token_data, source_id)
 
+    def _build_search_condition(
+        self,
+        payload: SearchParams,
+        column_names: list[str],
+        start_index: int,
+    ) -> tuple[str, list[str]]:
+        terms = [term for term in payload.filter.strip().split() if term]
+        if not terms:
+            return "", []
+
+        term_joiner = " OR " if payload.filter_mode == "or" else " AND "
+        term_clauses: list[str] = []
+        values: list[str] = []
+        placeholder_index = start_index
+
+        for term in terms:
+            column_clauses = []
+            for column_name in column_names:
+                values.append(term)
+                column_clauses.append(
+                    f"({column_name} ILIKE '%' || ${placeholder_index} || '%')"
+                )
+                placeholder_index += 1
+            term_clauses.append("(" + " OR ".join(column_clauses) + ")")
+
+        return "(" + term_joiner.join(term_clauses) + ")", values
+
+    def _search_filter_sql(self, search_condition: str) -> str:
+        if search_condition:
+            return f"AND (($3 = '') OR {search_condition})"
+        return "AND ($3 = '')"
+
     async def item_search_new(self, payload: SearchParams) -> dict:
         base_query = """SELECT
             count(*) OVER () AS total_count,
@@ -24,28 +56,27 @@ class ItemBucketListController(SourceBucketDetailController):
         LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
         LEFT JOIN tag_item_bucket AS j ON j.item_bucket_id = i.id
         LEFT JOIN tag AS t ON t.id = j.tag_id
-        WHERE (
-            ($3 = '') 
-            OR (i.notes ILIKE '%' || $4 || '%') 
-            OR (i.file_path ILIKE '%' || $5 || '%')
-            OR (i.title ILIKE '%' || $6 || '%')
-            OR (t.title ILIKE '%' || $7 || '%')
-        )
+        WHERE 1=1
         """
 
         values: list = [
             payload.limit,
             payload.offset,
             payload.filter,
-            payload.filter,
-            payload.filter,
-            payload.filter,
-            payload.filter,  # Used for tag title search
         ]
+
+        search_condition, filter_values = self._build_search_condition(
+            payload,
+            ["i.notes", "i.file_path", "i.title", "t.title"],
+            start_index=4,
+        )
+        base_query += f"\n        {self._search_filter_sql(search_condition)}"
+        values.extend(filter_values)
 
         if payload.tag_ids:
             placeholders = ", ".join(
-                f"${i}" for i in range(8, 8 + len(payload.tag_ids))
+                f"${i}"
+                for i in range(len(values) + 1, len(values) + 1 + len(payload.tag_ids))
             )
             base_query += f" AND j.tag_id IN ({placeholders})"
             values.extend(payload.tag_ids)
@@ -103,33 +134,37 @@ class ItemBucketListController(SourceBucketDetailController):
             source.grid_view
             FROM item_bucket AS i
             LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
-            LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id """
-            placeholders = ", ".join(
-                f"${i}" for i in range(8, 8 + len(payload.tag_ids))
+            LEFT JOIN tag_item_bucket as j ON j.item_bucket_id = i.id
+            WHERE 1=1"""
+            search_condition, filter_values = self._build_search_condition(
+                payload,
+                ["i.notes", "i.file_path", "i.title"],
+                start_index=4,
             )
-            query += f""" WHERE 
-            (
-              ($3 = '') 
-              OR (i.notes ILIKE '%' || $4 || '%') 
-              OR (i.file_path ILIKE '%' || $5 || '%')
-              OR (i.title ILIKE '%' || $6 || '%')
-            ) 
-            AND j.tag_id IN ({placeholders})
-            AND i.source_bucket_id = $7
-            """
-            query += """ 
-            GROUP BY i.id, source.title, source.bucket_name, source.media_prefix, source.grid_view
-            ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
+            query += f"\n            {self._search_filter_sql(search_condition)}"
             values: tuple = (
                 payload.limit,
                 payload.offset,
                 payload.filter,
-                payload.filter,
-                payload.filter,
-                payload.filter,
-                self.source_id,
             )
-            combined_values: tuple = values + tuple(payload.tag_ids)
+            combined_values = values + tuple(filter_values)
+            placeholders = ", ".join(
+                f"${i}"
+                for i in range(
+                    len(combined_values) + 1,
+                    len(combined_values) + 1 + len(payload.tag_ids),
+                )
+            )
+            combined_values += tuple(payload.tag_ids)
+            source_id_placeholder = len(combined_values) + 1
+            query += f"""
+            AND j.tag_id IN ({placeholders})
+            AND i.source_bucket_id = ${source_id_placeholder}
+            """
+            query += """ 
+            GROUP BY i.id, source.title, source.bucket_name, source.media_prefix, source.grid_view
+            ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
+            combined_values = combined_values + (self.source_id,)
             result: Record = await self.db.select_many(query, combined_values)
         else:
             query = """SELECT
@@ -141,24 +176,26 @@ class ItemBucketListController(SourceBucketDetailController):
             source.grid_view
             FROM item_bucket AS i
             LEFT JOIN source_bucket AS source ON source.id = i.source_bucket_id
-            WHERE (
-            ($3 = '') 
-            OR (i.notes ILIKE '%' || $4 || '%') 
-            OR (i.file_path ILIKE '%' || $5 || '%')
-            OR (i.title ILIKE '%' || $6 || '%')
+            WHERE 1=1
+            """
+            search_condition, filter_values = self._build_search_condition(
+                payload,
+                ["i.notes", "i.file_path", "i.title"],
+                start_index=4,
             )
-            AND i.source_bucket_id = $7
+            query += f"\n            {self._search_filter_sql(search_condition)}"
+            source_id_placeholder = 4 + len(filter_values) + 1
+            query += f"""
+            AND i.source_bucket_id = ${source_id_placeholder}
             ORDER BY i.id DESC LIMIT $1 OFFSET $2"""
             values = (
                 payload.limit,
                 payload.offset,
                 payload.filter,
-                payload.filter,
-                payload.filter,
-                payload.filter,
-                self.source_id,
             )
-            result = await self.db.select_many(query, values)
+            result = await self.db.select_many(
+                query, values + tuple(filter_values) + (self.source_id,)
+            )
 
         output: list[ItemBucket] = []
 

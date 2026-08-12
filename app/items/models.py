@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ class SearchParams(BaseModel):
     offset: int = 0
     filter: str = ""
     tag_ids: list[int] = []
+    filter_mode: Literal["or", "and"] = "or"
 
 
 class ItemTag(BaseModel):
